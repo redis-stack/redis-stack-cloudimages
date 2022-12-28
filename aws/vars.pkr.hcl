@@ -1,3 +1,15 @@
+variable "access_key" {
+  description = "AWS access key"
+  type        = string
+  default     = env("AWS_ACCESS_KEY")
+}
+
+variable "secret_key" {
+  description = "AWS secret key"
+  type        = string
+  default     = env("AWS_SECRET_KEY")
+}
+
 variable "ami_name" {
   description = "Name of AMI"
   type        = string

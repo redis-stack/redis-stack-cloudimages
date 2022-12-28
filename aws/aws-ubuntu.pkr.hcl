@@ -12,6 +12,8 @@ locals {
 }
 
 source "amazon-ebs" "redis-stack-focal" {
+  access_key =  "${var.access_key}"
+  secret_key =  "${var.secret_key}"
   ami_name      = "${var.ami_name}-${local.timestamp}"
   region        = "${var.region}"
   instance_type = "${var.instance_type}"
