@@ -1,0 +1,183 @@
+name: Packer CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+
+  build-image:
+    name: Build ${{ matrix.cloud-provisioners }} image
+    strategy:
+      matrix:
+        cloud-provisioners: ['aws']
+        # cloud-provisioners: ['aws','gcp','azure']
+      fail-fast: false
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Setup Packer
+      uses: hashicorp/setup-packer@main
+      with:
+        version: latest
+
+    - name: Run `packer init`
+      id: init
+      run: "packer init $GITHUB_WORKSPACE/${{ matrix.cloud-provisioners }}/${{ matrix.cloud-provisioners }}-ubuntu.pkr.hcl"
+
+    - name: Build image
+      run: |
+        packer build $GITHUB_WORKSPACE/${{ matrix.cloud-provisioners }}
+
+    - name: Upload image artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: ${{ matrix.cloud-provisioners }}-artifacts.json
+        path: ${{ matrix.cloud-provisioners }}-artifacts.json
+
+  create-instances:
+    needs: build-image
+    name: Create ${{ matrix.cloud-provisioners }} instance from image
+    strategy:
+      matrix:
+        cloud-provisioners: ['aws']
+        # cloud-provisioners: ['aws','gcp','azure']
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Download image artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: ${{ matrix.cloud-provisioners }}-artifacts.json
+
+    - name: Setup jq
+      run: sudo apt-get update && sudo apt-get install -y jq
+
+    # - name: Extract image ID's
+    #   run: |
+    #     redis-stack-arm-image-id=$(jq -r '.builds[] | select(.name == "redis-stack-arm") | ${{ matrix.cloud-provisioners }}-artifacts.json)
+    #     echo "redis-stack-arm-image-id=${redis-stack-arm-image-id}" >> $GITHUB_ENV
+    #     redis-stack-x86-image-id=$(jq -r '.builds[] | select(.name == "redis-stack-x86") | ${{ matrix.cloud-provisioners }}-artifacts.json)
+    #     echo "redis-stack-x86-image-id=${redis-stack-x86-image-id}" >> $GITHUB_ENV
+
+    #create ssh key for ec2
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1 #until we support multi regions
+
+    - name: check-key-pair
+      uses: aws-actions/aws-cli@v2
+      with:
+        args: ec2 describe-key-pairs --key-name redis-stack-packer-ci --query 'KeyPairs[*].KeyName' --output text
+      id: check-key-pair
+
+    - name: Create key pair if it does not exist
+      if: steps.check-key-pair.outputs.stdout == ''
+      uses: aws-actions/aws-cli@v2
+      with:
+        args: ec2 create-key-pair --key-name redis-stack-packer-ci --query 'KeyMaterial' --output text > redis-stack-packer-ci.pem
+
+    - name: Print message if key pair already exists
+      if: steps.check-key-pair.outputs.stdout != ''
+      run: echo "Key pair 'redis-stack-packer-ci' already exists, skipping creation."
+
+    - name: Create an EC2 instance - arm
+      uses: aws-actions/aws-cli@v2
+      env:
+        redis-stack-arm-image-id: $(jq -r '.builds[] | select(.name == "redis-stack-arm") | ${{ matrix.cloud-provisioners }}-artifacts.json)
+      with:
+        args: |
+         ec2 run-instances --image-id ${{ env.redis-stack-arm-image-id }} --key-name redis-stack-packer-ci
+
+    - name: SSH into the EC2 instance - arm
+      uses: aws-actions/ssh-action@main
+      with:
+        host: ${{ steps.create_ec2_instance.outputs.public_ip }}
+        username: ubuntu
+        key: redis-stack-packer-ci.pem
+        commands: |
+          # Install Python and pip
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip
+          
+          # Install pipenv
+          pip3 install pipenv
+          
+          # Clone redis-stack/redis-stack repo
+          git clone https://github.com/redis-stack/redis-stack.git
+          
+          # Change directory
+          cd redis-stack
+          
+          # Install the dependencies
+          pipenv install --dev
+          
+          # Run pytest command
+          pipenv run pytest -m "jammy"
+
+    - name: Create an EC2 instance - x86
+      uses: aws-actions/aws-cli@v2
+      env:
+        redis-stack-x86-image-id: $(jq -r '.builds[] | select(.name == "redis-stack-x86") | ${{ matrix.cloud-provisioners }}-artifacts.json)
+      with:
+        args: |
+         ec2 run-instances --image-id ${{ env.redis-stack-x86-image-id }} --key-name redis-stack-packer-ci 
+      #if success publish else deregister the AMI
+
+      
+    - name: SSH into the EC2 instance - x86
+      uses: aws-actions/ssh-action@main
+      with:
+        host: ${{ steps.create_ec2_instance.outputs.public_ip }}
+        username: ubuntu
+        key: redis-stack-packer-ci.pem
+        commands: |
+          # Install Python and pip
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip
+          
+          # Install pipenv
+          pip3 install pipenv
+          
+          # Clone redis-stack/redis-stack repo
+          git clone https://github.com/redis-stack/redis-stack.git
+          
+          # Change directory
+          cd redis-stack
+          
+          # Install the dependencies
+          pipenv install --dev
+          
+          # Run pytest command
+          pipenv run pytest -m 'jammy and not arm'
+      #if success publish else deregister the AMI
+
+
+
+    #TODO in the future
+    # - name: Create Instance - GCP
+    #   if: ${{ matrix.cloud-provisioner }} == 'gcp'
+    #   run: gcloud compute instances create my-instance --image-project=my-project --image-family=my-image-family
+      
+    # - name: Create Instance - Azure
+    #   if: ${{ matrix.cloud-provisioner }} == 'azure'
+    #   run: az vm create --resource-group myResourceGroup --name myVM --image UbuntuLTS --generate-ssh-keys
+
+#    - name: Publish image
+#      run: |
+        # PUBLISH COMMANDS
