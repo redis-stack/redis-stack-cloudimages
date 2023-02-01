@@ -8,7 +8,7 @@ packer {
 }
 
 locals {
-  timestamp = formatdate("DD-MM-YYYY", timestamp())
+  timestamp = formatdate("YYYYMMDD-HH-mm", timestamp())
 }
 
 source "amazon-ebs" "redis-stack-x86" {
@@ -50,7 +50,7 @@ source "amazon-ebs" "redis-stack-arm" {
 build {
   name = "redis-stack"
   sources = [
-    "source.amazon-ebs.redis-stack-x86",
+#    "source.amazon-ebs.redis-stack-x86",
     "source.amazon-ebs.redis-stack-arm"
   ]
   provisioner "shell" {

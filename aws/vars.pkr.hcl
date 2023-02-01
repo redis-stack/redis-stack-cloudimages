@@ -37,13 +37,13 @@ variable "instance_type_arm" {
 variable "source_ami_filter_name_x86" {
   description = "Desired source ami filter name"
   type        = string
-  default     = "ubuntu/images/*ubuntu-jammy-22.04-amd64-server-*" #x86
+  default     = "ubuntu/images/*ubuntu-focal-20.04-amd64-server-*" #x86
 }
 
 variable "source_ami_filter_name_arm" {
   description = "Desired source ami filter name"
   type        = string
-  default     = "ubuntu/images/*ubuntu-jammy-22.04-arm64-server-*" #arm
+  default     = "ubuntu/images/*ubuntu-focal-20.04-arm64-server-*" #arm
 }
 
 variable "most_recent" {

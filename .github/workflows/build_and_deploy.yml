@@ -168,7 +168,6 @@ jobs:
       #if success publish else deregister the AMI
 
 
-
     #TODO in the future
     # - name: Create Instance - GCP
     #   if: ${{ matrix.cloud-provisioner }} == 'gcp'
