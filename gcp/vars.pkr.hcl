@@ -7,7 +7,7 @@ variable "project_id" {
 variable "image_name" {
   description = "Name of the image to create"
   type        = string
-  default     = "ubuntu-jammy"
+  default     = "redis-stack"
 }
 
 variable "service_account_file" {
@@ -25,7 +25,7 @@ variable "image_family" {
 variable "machine_type" {
   description = "The machine type to use"
   type        = string
-  default     = "e2-micro"
+  default     = "n1-standard-1"
 }
 
 variable "ssh_username" {
