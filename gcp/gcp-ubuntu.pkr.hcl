@@ -9,14 +9,17 @@ packer {
 
 locals {
   timestamp = formatdate("DD-MM-YYYY", timestamp())
+  wait_to_add_ssh_keys = "1m"
 }
 
 source "googlecompute" "redis-stack-x86" {
   project_id  = "${var.project_id}"
   image_name  = "${var.image_name}-x86-${local.timestamp}"
   account_file = "${var.service_account_file}"
-  source_image_family = "${var.image_family}"
+  machine_type = "${var.machine_type}"
+  source_image_family = "${var.image_family}" 
   ssh_username = "${var.ssh_username}"
+  wait_to_add_ssh_keys = "${local.wait_to_add_ssh_keys}"
   zone = "${var.zone}"
 }
 
@@ -24,8 +27,10 @@ source "googlecompute" "redis-stack-arm" {
   project_id  = "${var.project_id}"
   image_name  = "${var.image_name}-arm-${local.timestamp}"
   account_file = "${var.service_account_file}"
-  source_image_family = "${var.image_family}"
+  machine_type = "${var.machine_type}"
+  source_image_family = "${var.image_family}-arm64"
   ssh_username = "${var.ssh_username}"
+  wait_to_add_ssh_keys = "${local.wait_to_add_ssh_keys}"
   zone = "${var.zone}"
 }
 
@@ -36,6 +41,10 @@ build {
     "source.googlecompute.redis-stack-arm"
   ]
   provisioner "shell" {
-    script = "../redis-stack-installation.sh"
+    script = "redis-stack-installation.sh"
+  }
+  post-processor "manifest" {
+    output     = "gcp-artifacts.json"
+    strip_path = true
   }
 }
