@@ -6,6 +6,11 @@ on:
       cloud-platform:
         required: true
         type: string
+      deregister:
+        required: true
+        type: boolean
+        default: true
+
 
 jobs:
   create-instances:
@@ -116,3 +121,8 @@ jobs:
           # Run pytest command
           pipenv run pytest -m 'jammy and not arm'
 
+    # - name: Deregister AMI 
+    #   if: ${{ inputs.deregister == true }}
+    #   run: |
+    #     aws ec2 deregister-image --image-id="ami-055ff4aae33b69ace" --region="us-east-1"
+      
