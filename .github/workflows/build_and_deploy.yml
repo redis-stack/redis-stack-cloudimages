@@ -57,10 +57,11 @@ jobs:
     name: Create ${{ needs.build-image.outputs.cloud-platform }} instance from image
     runs-on: ubuntu-latest
     steps:
-      - name: create instances
-        uses: ./.github/workflows/${{ needs.build-image.outputs.cloud-platform }}.yml
+      - name: create instances in aws
+        if: ${{ needs.build-image.outputs.cloud-platform == "aws" }} #workaround until github will support env variables in uses #25246
+        uses: ./.github/workflows/aws.yml
         with:
-          cloud-platform: ${{ needs.build-image.outputs.cloud-platform }}
+          cloud-platform: "aws"
 
     # env:
     #   cloud-platform: ${{ needs.build-image.outputs.cloud-platform }}
