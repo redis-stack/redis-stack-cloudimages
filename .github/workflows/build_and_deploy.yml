@@ -60,11 +60,11 @@ jobs:
       - name: echo path
         run: |
           echo ${{ needs.build-image.outputs.cloud-platform }}
-      - name: create instances in aws
-        if: ${{ needs.build-image.outputs.cloud-platform == aws }} #workaround until github will support env variables in uses #25246
-        uses: ./.github/workflows/aws.yml
-        with:
-          cloud-platform: aws
+      # - name: create instances in aws
+      #   if: ${{ needs.build-image.outputs.cloud-platform == aws }} #workaround until github will support env variables in uses #25246
+      #   uses: ./.github/workflows/aws.yml
+      #   with:
+      #     cloud-platform: aws
 
     # env:
     #   cloud-platform: ${{ needs.build-image.outputs.cloud-platform }}
