@@ -55,11 +55,12 @@ jobs:
   create-instances:
     needs: build-image
     name: Create ${{ needs.build-image.outputs.cloud-platform }} instance from image
-    env:
-      W_PATH: ./.github/workflows/${{ needs.build-image.outputs.cloud-platform }}.yml
-    uses: ${{ env.W_PATH }}
-    with:
-      cloud-platform: ${{ needs.build-image.outputs.cloud-platform }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: create instances
+        uses: ./.github/workflows/${{ needs.build-image.outputs.cloud-platform }}.yml
+        with:
+          cloud-platform: ${{ needs.build-image.outputs.cloud-platform }}
 
     # env:
     #   cloud-platform: ${{ needs.build-image.outputs.cloud-platform }}
