@@ -60,8 +60,6 @@ jobs:
         # cloud-provisioners: ['aws','gcp','azure']
       fail-fast: false
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
       - uses: ./.github/workflows/${{ matrix.cloud-provisioners }}.yml
         with:
           cloud-platform: ${{ matrix.cloud-provisioners }}
