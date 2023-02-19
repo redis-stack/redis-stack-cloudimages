@@ -62,8 +62,8 @@ jobs:
     steps:
       - name: echo env
         run: |
-          echo ${{ env.create-instances-workflow-path }}
-          echo ${{ env.cloud-platform }}
+          echo ${cloud-platform}
+          echo ${create-instances-workflow-path}
       # - uses: ${{ env.create-instances-workflow-path }}
       #   with:
       #     cloud-platform: ${{ env.cloud-platform }}
