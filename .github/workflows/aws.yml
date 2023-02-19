@@ -45,28 +45,24 @@ jobs:
         aws-region: us-east-1 #until we support multi regions
 
     - name: check-key-pair
-      uses: aws-actions/aws-cli@v2
-      with:
-        args: ec2 describe-key-pairs --key-name redis-stack-packer-ci --query 'KeyPairs[*].KeyName' --output text
+      run: |
+        aws ec2 describe-key-pairs --key-name redis-stack-packer-ci --query 'KeyPairs[*].KeyName' --output text
       id: check-key-pair
 
     - name: Create key pair if it does not exist
       if: steps.check-key-pair.outputs.stdout == ''
-      uses: aws-actions/aws-cli@v2
-      with:
-        args: ec2 create-key-pair --key-name redis-stack-packer-ci --query 'KeyMaterial' --output text > redis-stack-packer-ci.pem
+      run: |
+        aws ec2 create-key-pair --key-name redis-stack-packer-ci --query 'KeyMaterial' --output text > redis-stack-packer-ci.pem
 
     - name: Print message if key pair already exists
       if: steps.check-key-pair.outputs.stdout != ''
       run: echo "Key pair 'redis-stack-packer-ci' already exists, skipping creation."
 
     # - name: Create an EC2 instance - arm
-    #   uses: aws-actions/aws-cli@v2
     #   env:
     #     redis-stack-arm-image-id: $(jq -r '.builds[] | select(.name == "redis-stack-arm") | ${{ inputs.cloud-platform }}-artifacts.json)
-    #   with:
-    #     args: |
-    #      ec2 run-instances --image-id ${{ env.redis-stack-arm-image-id }} --key-name redis-stack-packer-ci
+    #   run: |
+  #      aws ec2 run-instances --image-id ${{ env.redis-stack-arm-image-id }} --key-name redis-stack-packer-ci
 
     # - name: SSH into the EC2 instance and test - arm
     #   uses: aws-actions/ssh-action@main
@@ -95,20 +91,18 @@ jobs:
     #       pipenv run pytest -m "jammy"
 
     - name: Create an EC2 instance - x86
-      uses: aws-actions/aws-cli@v2
       env:
         redis-stack-x86-image-id: $(jq -r '.builds[] | select(.name == "redis-stack-x86") | ${{ inputs.cloud-platform }}-artifacts.json)
-      with:
-        args: |
-         ec2 run-instances --image-id ${{ env.redis-stack-x86-image-id }} --key-name redis-stack-packer-ci 
+      run: |
+        aws ec2 run-instances --image-id ${{ env.redis-stack-x86-image-id }} --key-name redis-stack-packer-ci 
 
     - name: SSH into the EC2 instance - x86
-      uses: aws-actions/ssh-action@main
+      uses: appleboy/ssh-action@v0.1.7
       with:
         host: ${{ steps.create_ec2_instance.outputs.public_ip }}
         username: ubuntu
-        key: redis-stack-packer-ci.pem
-        commands: |
+        key_path: redis-stack-packer-ci.pem
+        script: |
           # Install Python and pip
           sudo apt-get update
           sudo apt-get install -y python3 python3-pip
