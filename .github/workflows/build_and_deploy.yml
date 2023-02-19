@@ -58,7 +58,7 @@ jobs:
     name: Create ${{ needs.build-image.outputs.cloud-platform }} instance from image
     env:
       cloud-platform: ${{ needs.build-image.outputs.cloud-platform }}
-      create-instances-workflow-path: "./.github/workflows/${ env.cloud-platform }}.yml"
+      create-instances-workflow-path: "./.github/workflows/${{ env.cloud-platform }}.yml"
     steps:
       - name: echo env
         run: |
