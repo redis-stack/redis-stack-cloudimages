@@ -59,6 +59,11 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+    - name: echo params
+      env:
+        cloud: ${{ matrix.cloud-provisioners }}
+      run: |
+        find . -type f -print0 | xargs -0 echo
     - name: create instances in aws
       if: ${{ needs.build-image.outputs.cloud-platform == 'aws' }} #workaround until github will support env variables in uses #25246
       uses: ./.github/workflows/aws.yml
