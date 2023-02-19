@@ -60,9 +60,13 @@ jobs:
       cloud-platform: ${{ needs.build-image.outputs.cloud-platform }}
       create-instances-workflow-path: ./.github/workflows/${{ env.cloud-platform }}.yml
     steps:
-      - uses: ${{ env.create-instances-workflow-path }}
-        with:
-          cloud-platform: ${{ env.cloud-platform }}
+      - name: echo env
+        run: |
+          echo ${{ env.create-instances-workflow-path }}
+          echo ${{ env.cloud-platform }}
+      # - uses: ${{ env.create-instances-workflow-path }}
+      #   with:
+      #     cloud-platform: ${{ env.cloud-platform }}
 
 
 
