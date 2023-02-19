@@ -38,11 +38,15 @@ jobs:
       run: |
         packer build $GITHUB_WORKSPACE/${{ matrix.cloud-provisioners }}
 
+    - name: echo params
+      run: |
+        find . -type f -print0 | xargs -0 echo
+
     - name: Upload image artifacts
       uses: actions/download-artifact@v2
       with:
         name: ${{ matrix.cloud-provisioners }}-artifacts.json
-        path: ${{ matrix.cloud-provisioners }}-artifacts.json
+        path: ./${{ matrix.cloud-provisioners }}-artifacts.json
 
   create-instances:
     needs: build-image
