@@ -46,14 +46,17 @@ jobs:
 
   create-instances:
     needs: build-image
+    runs-on: ubuntu-latest
     name: Create ${{ matrix.cloud-provisioners }} instance from image
     strategy:
       matrix:
         cloud-provisioners: ['aws']
         # cloud-provisioners: ['aws','gcp','azure']
       fail-fast: false
+    env:
+      cloud-platform: ${{ matrix.cloud-provisioners }}
     steps:
-      - uses: ./.github/workflows/${{ matrix.cloud-provisioners }}.yml
+      - uses: ./.github/workflows/$cloud-platform.yml
         with:
           cloud-platform: ${{ matrix.cloud-provisioners }}
 
