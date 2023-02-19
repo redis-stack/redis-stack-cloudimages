@@ -53,7 +53,7 @@ jobs:
         # cloud-provisioners: ['aws','gcp','azure']
       fail-fast: false
     steps:
-      - uses: ${{ matrix.cloud-provisioners }}.yml
+      - uses: ./.github/workflows/${{ matrix.cloud-provisioners }}.yml
         with:
           cloud-platform: ${{ matrix.cloud-provisioners }}
 
