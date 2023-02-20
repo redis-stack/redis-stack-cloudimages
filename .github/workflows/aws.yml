@@ -35,9 +35,9 @@ jobs:
     - name: Extract image ID's and regions
       run: |
         redis-stack-x86-image-id=$(cat ${{ inputs.cloud-platform }}-artifacts.json | jq -r '.builds[] | select(.name == "redis-stack-x86").artifact_id | split(":") | .[1]' )
-        echo "redis-stack-x86-image-id=${redis-stack-x86-image-id}" >> $GITHUB_ENV
+        echo "redis-stack-x86-image-id='${redis-stack-x86-image-id}'" >> $GITHUB_ENV
         redis-stack-x86-region=$(cat ${{ inputs.cloud-platform }}-artifacts.json | jq -r '.builds[] | select(.name == "redis-stack-x86").artifact_id | split(":") | .[0]' )
-        echo "redis-stack-x86-region=${redis-stack-x86-region}" >> $GITHUB_ENV
+        echo "redis-stack-x86-region='${redis-stack-x86-region}'" >> $GITHUB_ENV
     #     redis-stack-arm-image-id=$(jq -r '.builds[] | select(.name == "redis-stack-arm") | ${{ inputs.cloud-platform }}-artifacts.json)
     #     echo "redis-stack-arm-image-id=${redis-stack-arm-image-id}" >> $GITHUB_ENV
 
