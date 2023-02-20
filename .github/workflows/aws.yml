@@ -54,12 +54,12 @@ jobs:
       continue-on-error: true
 
     - name: Create key pair if it does not exist
-      if: steps.check-key-pair.outputs.stdout == ''
+      if: ${{steps.check-key-pair.outputs.stdout == ''}
       run: |
         aws ec2 create-key-pair --key-name redis-stack-packer-ci --query 'KeyMaterial' --output text > redis-stack-packer-ci.pem
 
     - name: Print message if key pair already exists
-      if: steps.check-key-pair.outputs.stdout != ''
+      if: ${{steps.check-key-pair.outputs.stdout != ''}}
       run: echo "Key pair 'redis-stack-packer-ci' already exists, skipping creation."
 
     # - name: Create an EC2 instance - arm
