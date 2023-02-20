@@ -33,9 +33,6 @@ jobs:
     #     echo "redis-stack-arm-image-id=${redis-stack-arm-image-id}" >> $GITHUB_ENV
     #     redis-stack-x86-image-id=$(jq -r '.builds[] | select(.name == "redis-stack-x86") | ${{ inputs.cloud-platform }}-artifacts.json)
     #     echo "redis-stack-x86-image-id=${redis-stack-x86-image-id}" >> $GITHUB_ENV
-    - name: echo secrets
-      run: |
-        echo ${{ secrets.AWS_ACCESS_KEY }}
 
     #create ssh key for ec2
     - name: Configure AWS Credentials
