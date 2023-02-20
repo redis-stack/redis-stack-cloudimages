@@ -98,6 +98,7 @@ jobs:
       env:
         redis-stack-x86-image-id: $(jq -r '.builds[] | select(.name == "redis-stack-x86") | ${{ inputs.cloud-platform }}-artifacts.json)
       run: |
+        echo {{env.redis-stack-x86-image-id}}
         aws ec2 run-instances --image-id ${{ env.redis-stack-x86-image-id }} --key-name redis-stack-packer-ci 
 
     - name: SSH into the EC2 instance - x86
