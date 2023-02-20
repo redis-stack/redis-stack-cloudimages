@@ -34,10 +34,10 @@ jobs:
 
     - name: Extract image ID's and regions
       run: |
-        redis-stack-x86-image-id=$(cat ${{ inputs.cloud-platform }}-artifacts.json | jq -r '.builds[] | select(.name == "redis-stack-x86").artifact_id | split(":") | .[1]' )
-        echo "redis_stack_x86_image_id='${redis-stack-x86-image-id}'" >> $GITHUB_ENV
-        redis-stack-x86-region=$(cat ${{ inputs.cloud-platform }}-artifacts.json | jq -r '.builds[] | select(.name == "redis-stack-x86").artifact_id | split(":") | .[0]' )
-        echo "redis_stack_x86_region='${redis-stack-x86-region}'" >> $GITHUB_ENV
+        redis_stack_x86_image_id=$(cat ${{ inputs.cloud-platform }}-artifacts.json | jq -r '.builds[] | select(.name == "redis-stack-x86").artifact_id | split(":") | .[1]' )
+        echo "redis_stack_x86_image_id='${redis_stack_x86_image_id}'" >> $GITHUB_ENV
+        redis_stack_x86_region=$(cat ${{ inputs.cloud-platform }}-artifacts.json | jq -r '.builds[] | select(.name == "redis-stack-x86").artifact_id | split(":") | .[0]' )
+        echo "redis_stack_x86_region='${redis_stack_x86_region}'" >> $GITHUB_ENV
     #     redis-stack-arm-image-id=$(jq -r '.builds[] | select(.name == "redis-stack-arm") | ${{ inputs.cloud-platform }}-artifacts.json)
     #     echo "redis-stack-arm-image-id=${redis-stack-arm-image-id}" >> $GITHUB_ENV
 
