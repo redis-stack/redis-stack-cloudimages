@@ -54,21 +54,11 @@ jobs:
 
   create-instances:
     needs: build-image
+    if: ${{ needs.build-image.outputs.cloud-platform == 'aws' }} #workaround until github will support env variables in uses #25246
     name: Create ${{ needs.build-image.outputs.cloud-platform }} instance from image
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-    - name: echo params
-      env:
-        cloud: ${{ matrix.cloud-provisioners }}
-      run: |
-        find . -type f -print0 | xargs -0 echo
-    - name: create instances in aws
-      if: ${{ needs.build-image.outputs.cloud-platform == 'aws' }} #workaround until github will support env variables in uses #25246
-      uses: ./.github/workflows/aws.yml
-      with:
-        cloud-platform: aws
+    uses: ./.github/workflows/aws.yml
+    with:
+      cloud-platform: aws
 
     # env:
     #   cloud-platform: ${{ needs.build-image.outputs.cloud-platform }}
