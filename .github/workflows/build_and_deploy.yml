@@ -56,13 +56,13 @@ jobs:
     needs: build-image
     if: ${{ needs.build-image.outputs.cloud-platform == 'aws' }} #workaround until github will support env variables in uses #25246
     name: Create ${{ needs.build-image.outputs.cloud-platform }} instance from image
-    permissions:
-      id-token: write # need this for OIDC
-      contents: read
     uses: ./.github/workflows/aws.yml
     with:
       cloud-platform: aws
       deregister: true
+    secrets:
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY}}
+      AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY}}
 
     # env:
     #   cloud-platform: ${{ needs.build-image.outputs.cloud-platform }}
