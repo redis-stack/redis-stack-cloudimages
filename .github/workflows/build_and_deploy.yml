@@ -59,6 +59,7 @@ jobs:
     uses: ./.github/workflows/aws.yml
     with:
       cloud-platform: aws
+      deregister: true
 
     # env:
     #   cloud-platform: ${{ needs.build-image.outputs.cloud-platform }}
