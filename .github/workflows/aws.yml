@@ -35,9 +35,9 @@ jobs:
     - name: Extract image ID's and regions
       run: |
         redis-stack-x86-image-id=$(cat ${{ inputs.cloud-platform }}-artifacts.json | jq -r '.builds[] | select(.name == "redis-stack-x86").artifact_id | split(":") | .[1]' )
-        echo "redis-stack-x86-image-id='${redis-stack-x86-image-id}'" >> $GITHUB_ENV
+        echo "redis_stack_x86_image_id='${redis-stack-x86-image-id}'" >> $GITHUB_ENV
         redis-stack-x86-region=$(cat ${{ inputs.cloud-platform }}-artifacts.json | jq -r '.builds[] | select(.name == "redis-stack-x86").artifact_id | split(":") | .[0]' )
-        echo "redis-stack-x86-region='${redis-stack-x86-region}'" >> $GITHUB_ENV
+        echo "redis_stack_x86_region='${redis-stack-x86-region}'" >> $GITHUB_ENV
     #     redis-stack-arm-image-id=$(jq -r '.builds[] | select(.name == "redis-stack-arm") | ${{ inputs.cloud-platform }}-artifacts.json)
     #     echo "redis-stack-arm-image-id=${redis-stack-arm-image-id}" >> $GITHUB_ENV
 
@@ -66,8 +66,8 @@ jobs:
 
     - name: Create an EC2 instance - x86
       run: |
-        echo ${{ env.redis-stack-x86-image-id }}
-        aws ec2 run-instances --image-id ${{ env.redis-stack-x86-image-id }} --key-name redis-stack-packer-ci --region ${{ env.redis-stack-x86-region }}
+        echo ${{ env.redis_stack_x86_image_id }}
+        aws ec2 run-instances --image-id ${{ env.redis_stack_x86_image_id }} --key-name redis-stack-packer-ci --region ${{ env.redis_stack_x86_region }}
 
     - name: SSH into the EC2 instance - x86
       uses: appleboy/ssh-action@v0.1.7
