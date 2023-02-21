@@ -60,6 +60,7 @@ jobs:
     with:
       cloud-platform: aws
       deregister: true
+    permissions: write-all
     secrets:
       AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY}}
       AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY}}
