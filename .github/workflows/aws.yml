@@ -74,7 +74,7 @@ jobs:
 
     - name: Create an EC2 instance - x86
       run: |
-        aws ec2 run-instances --image-id ${{ env.redis_stack_x86_image_id }} --key-name redis-stack-packer-ci --region ${{ env.redis_stack_x86_region }}
+        aws ec2 run-instances --image-id ${{ env.redis_stack_x86_image_id }} --key-name redis-stack-packer-ci --region ${{ env.redis_stack_x86_region }} --instance-type t2.micro
       id: create_ec2_instance
 
     - name: echo ip
