@@ -61,7 +61,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         aws ec2 create-key-pair --key-name redis-stack-packer-ci --query 'KeyMaterial' --output text > redis-stack-packer-ci.pem
-        gh secret set SSH_PRIVATE_KEY < redis-stack-packer-ci.pem
+        # gh secret set SSH_PRIVATE_KEY < redis-stack-packer-ci.pem
 
     - name: Print message if key pair already exists
       if: steps.check-key-pair.outcome == 'success'
@@ -101,6 +101,11 @@ jobs:
     #   run: |
     #     aws ec2 terminate-instances --image-id ${{ env.redis_stack_x86_image_id }} --key-name redis-stack-packer-ci --region ${{ env.redis_stack_x86_region }}
 
+    - name: Deregister x86 AMI 
+      if: (success() || failure()) && ${{ inputs.deregister == true }}
+      run: |
+        aws ec2 deregister-image --image-id="${{ env.redis_stack_x86_image_id }}" --region="${{ env.redis_stack_x86_region }}"
+      
     # - name: Create an EC2 instance - arm
     #   env:
     #     redis-stack-arm-image-id: $(jq -r '.builds[] | select(.name == "redis-stack-arm") | ${{ inputs.cloud-platform }}-artifacts.json)
@@ -132,9 +137,3 @@ jobs:
           
     #       # Run pytest command
     #       pipenv run pytest -m "jammy"
-
-    - name: Deregister x86 AMI 
-      if: success() || failure() && ${{ inputs.deregister == true }}
-      run: |
-        aws ec2 deregister-image --image-id="${{ env.redis_stack_x86_image_id }}" --region="${{ env.redis_stack_x86_region }}"
-      
