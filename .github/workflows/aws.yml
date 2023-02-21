@@ -61,7 +61,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         aws ec2 create-key-pair --key-name redis-stack-packer-ci --query 'KeyMaterial' --output text > redis-stack-packer-ci.pem
-        gh secrets SSH_PRIVATE_KEY > redis-stack-packer-ci.pem
+        gh secret SSH_PRIVATE_KEY < redis-stack-packer-ci.pem
 
     - name: Print message if key pair already exists
       if: steps.check-key-pair.outcome == 'success'
