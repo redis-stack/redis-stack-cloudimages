@@ -47,7 +47,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-        aws-region: ${{ env.redis_stack_x86_region }} #until we support multi regions
+        aws-region: us-east-1 #until we support multi regions
 
     - name: check-key-pair
       run: |
