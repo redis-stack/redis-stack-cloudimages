@@ -17,6 +17,11 @@ on:
       AWS_SECRET_KEY:
         required: true
 
+permissions:
+  contents: 'read'
+  id-token: 'write'
+  issues: 'write'
+
 jobs:
   create-instances:
     name: Create instance from image
@@ -96,6 +101,10 @@ jobs:
           
           # Run pytest command
           pipenv run pytest -m 'jammy and not arm'
+
+    - name: Terminate an EC2 instance - x86
+      run: |
+        aws ec2  terminate-instances --image-id ${{ env.redis_stack_x86_image_id }} --key-name redis-stack-packer-ci --region ${{ env.redis_stack_x86_region }}
 
     # - name: Create an EC2 instance - arm
     #   env:
