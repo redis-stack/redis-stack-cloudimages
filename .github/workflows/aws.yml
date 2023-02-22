@@ -95,31 +95,57 @@ jobs:
         aws ec2 authorize-security-group-ingress --group-name default --protocol tcp --port 22 --cidr $LOCAL_IP/32
 
     - name: run tests agains ec2 instance - x86
-      env:
-        HOST: ${{ steps.create_ec2_instance.outputs.public_ip }}
-        USERNAME: ubuntu
-        SSH_KEY_PATH: ./ssh.privatekey
-      run: |
-          #SSH into ec2 instance
-          ssh -o StrictHostKeyChecking=no -i ${{ env.SSH_KEY_PATH }} ${{ env.USERNAME }}@${{ env.HOST }}
-          # Install Python and pip
-          sudo apt-get update
-          sudo apt-get install -y python3 python3-pip
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ steps.create_ec2_instance.outputs.public_ip }}
+        username: ubuntu
+        key_path: ./ssh.privatekey
+        script: |
+            # Install Python and pip
+            sudo apt-get update
+            sudo apt-get install -y python3 python3-pip
+            
+            # Install pipenv
+            pip3 install pipenv
+            
+            # Clone redis-stack/redis-stack repo
+            git clone https://github.com/redis-stack/redis-stack.git
+            
+            # Change directory
+            cd redis-stack
+            
+            # Install the dependencies
+            pipenv install --dev
+            
+            # Run pytest command
+            pipenv run pytest -m 'jammy and not arm'
+
+    # - name: run tests agains ec2 instance - x86
+    #   env:
+    #     HOST: ${{ steps.create_ec2_instance.outputs.public_ip }}
+    #     USERNAME: ubuntu
+    #     SSH_KEY_PATH: ./ssh.privatekey
+    #   run: |
+    #       #SSH into ec2 instance
+    #       ssh -tt -o StrictHostKeyChecking=no -i ${{ env.SSH_KEY_PATH }} ${{ env.USERNAME }}@${{ env.HOST }}
+    #       # Install Python and pip
+    #       sudo apt-get update
+    #       sudo apt-get install -y python3 python3-pip
           
-          # Install pipenv
-          pip3 install pipenv
+    #       # Install pipenv
+    #       pip3 install pipenv
           
-          # Clone redis-stack/redis-stack repo
-          git clone https://github.com/redis-stack/redis-stack.git
+    #       # Clone redis-stack/redis-stack repo
+    #       git clone https://github.com/redis-stack/redis-stack.git
           
-          # Change directory
-          cd redis-stack
+    #       # Change directory
+    #       cd redis-stack
           
-          # Install the dependencies
-          pipenv install --dev
+    #       # Install the dependencies
+    #       pipenv install --dev
           
-          # Run pytest command
-          pipenv run pytest -m 'jammy and not arm'
+    #       # Run pytest command
+    #       pipenv run pytest -m 'jammy and not arm'
 
     - name: Terminate an EC2 instance - x86
       if: steps.create_ec2_instance.outcome == 'success'
