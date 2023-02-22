@@ -90,6 +90,7 @@ jobs:
     - name: echo ip
       run: |
         aws ec2 describe-instances --instance-ids ${{ steps.create_ec2_instance.outputs.instance_id }} --query 'Reservations[*].Instances[*].[PublicIpAddress]' --output text | tr '\t' '\n'
+        echo ${{ env.private_key }}
 
     - name: enable ssh from local ip
       run: |
