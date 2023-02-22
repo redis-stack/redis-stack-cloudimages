@@ -71,7 +71,8 @@ jobs:
       run: |
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ssh.privatekey
         chmod 0400 ssh.privatekey
-        ssh-keygen -f ssh.privatekey -y > ssh.publickey
+        echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCZ5Tc0Q6dnuxnFJtJbrx2UrcfL5kcaMRZgGIUk71ewObKCCfduTWqdWfb2nFD9fcFu6k8w8SFR9yT/lD2IgJsUtaUOBhtZ/W1xrLgtBfK6glIt0jt4rqtD1UBy/N/WiCxoNFTsN0sStsFvqWQ4nvQpsivSLEOF2Sw8JfGSozL9QAe+dmX9Ry+alu6D0/C7QXj3dukDCCYVN0heJMpxAOid4zvD9f/EatIUZ9RY5uc5VdbyipeRZMDMf2gioOLimH4v7hQaLlLCJcppeLnLgqZHGogYo5sk6WUJ4tu0Zm0ce7jKao3AuvrobKm0IY8Q7dUdXHiDh6dzLuqOe34iLdKP
+" > ssh.publickey
 
     - name: Create an EC2 instance - x86
       run: |
