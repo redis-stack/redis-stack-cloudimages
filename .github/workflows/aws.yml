@@ -84,6 +84,7 @@ jobs:
         instance_id=$(echo $output | jq -r '.Instances[0].InstanceId')
         public_ip=$(aws ec2 describe-instances --instance-ids $instance_id --query 'Reservations[*].Instances[*].[PublicIpAddress]' --output text | tr '\t' '\n')
         echo "::set-output name=public_ip::$public_ip"
+        echo "::set-output name=instance_id::$instance_id"
 
     - name: echo ip
       run: |
@@ -92,7 +93,7 @@ jobs:
     - name: echo params
       run: |
         find . -type f -print0 | xargs -0 echo
-        cat ./ssh.privatekey
+        ls -la
 
     - name: enable ssh from local ip
       run: |
@@ -104,7 +105,7 @@ jobs:
       with:
         host: ${{ steps.create_ec2_instance.outputs.public_ip }}
         username: ubuntu
-        key: ${{ env.private_key }}
+        key: '${{ secrets.SSH_PRIVATE_KEY }}'
         script: |
             # Install Python and pip
             sudo apt-get update
@@ -153,12 +154,12 @@ jobs:
     #       pipenv run pytest -m 'jammy and not arm'
 
     - name: Terminate an EC2 instance - x86
-      if: success() || failure()
+      if: always() && steps.create_ec2_instance.outcome == 'success'
       run: |
-        aws ec2 terminate-instances --image-id ${{ env.redis_stack_x86_image_id }} --key-name redis-stack-packer-ci --region ${{ env.redis_stack_x86_region }}
+        aws ec2 terminate-instances --instance-ids ${{ steps.create_ec2_instance.outputs.instance_id }} --region ${{ env.redis_stack_x86_region }}
 
     - name: Deregister x86 AMI 
-      if: (success() || failure()) && ${{ inputs.deregister == true }}
+      if: always() && ${{ inputs.deregister == true }}
       run: |
         aws ec2 deregister-image --image-id="${{ env.redis_stack_x86_image_id }}" --region="${{ env.redis_stack_x86_region }}"
       
