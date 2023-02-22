@@ -71,10 +71,11 @@ jobs:
       run: |
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ssh.privatekey
         chmod 0400 ssh.privatekey
-        private_key = $(cat ssh.privatekey)
+        private_key=$(cat ssh.privatekey)
         echo "private_key='${private_key}'" >> $GITHUB_ENV
 
     - name: Create an EC2 instance - x86
+      id: create_ec2_instance
       run: |
         output=$(aws ec2 run-instances \
         --image-id ${{ env.redis_stack_x86_image_id }} \
@@ -85,7 +86,6 @@ jobs:
         instance_id=$(echo $output | jq -r '.Instances[0].InstanceId')
         public_ip=$(aws ec2 describe-instances --instance-ids $instance_id --query 'Reservations[*].Instances[*].[PublicIpAddress]' --output text | tr '\t' '\n')
         echo "::set-output name=public_ip::$public_ip"
-      id: create_ec2_instance
 
     - name: echo ip
       run: |
