@@ -71,8 +71,6 @@ jobs:
       run: |
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ssh.privatekey
         chmod 0400 ssh.privatekey
-        echo "PPPPPPPPPPPPPPPPPPPPPPPP"
-        cat ssh.privatekey
 
     - name: Create an EC2 instance - x86
       id: create_ec2_instance
@@ -90,7 +88,11 @@ jobs:
     - name: echo ip
       run: |
         aws ec2 describe-instances --instance-ids ${{ steps.create_ec2_instance.outputs.instance_id }} --query 'Reservations[*].Instances[*].[PublicIpAddress]' --output text | tr '\t' '\n'
-        echo ${{ env.private_key }}
+
+    - name: echo params
+      run: |
+        find . -type f -print0 | xargs -0 echo
+        cat ./ssh.privatekey
 
     - name: enable ssh from local ip
       run: |
@@ -151,7 +153,7 @@ jobs:
     #       pipenv run pytest -m 'jammy and not arm'
 
     - name: Terminate an EC2 instance - x86
-      if: steps.create_ec2_instance.outcome == 'success'
+      if: success() || failure()
       run: |
         aws ec2 terminate-instances --image-id ${{ env.redis_stack_x86_image_id }} --key-name redis-stack-packer-ci --region ${{ env.redis_stack_x86_region }}
 
