@@ -85,7 +85,7 @@ jobs:
         aws ec2 authorize-security-group-ingress --group-name default --protocol tcp --port 22 --cidr $LOCAL_IP/32
 
     - name: run tests agains ec2 instance - x86
-      uses: appleboy/ssh-action@master
+      uses: appleboy/ssh-action@v0.1.4
       with:
         host: ${{ steps.create_ec2_instance.outputs.public_ip }}
         username: ubuntu
@@ -145,7 +145,7 @@ jobs:
     - name: Deregister x86 AMI 
       if: always() && inputs.deregister == true
       run: |
-        aws ec2 deregister-image --image-id="${{ env.redis_stack_x86_image_id }}" --region=${{ env.redis_stack_x86_region }}
+        aws ec2 deregister-image --image-id=${{ env.redis_stack_x86_image_id }} --region=${{ env.redis_stack_x86_region }}
       
     # - name: Create an EC2 instance - arm
     #   env:
