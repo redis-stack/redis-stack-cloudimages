@@ -65,21 +65,6 @@ jobs:
       AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY}}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY}}
 
-    # env:
-    #   cloud-platform: ${{ needs.build-image.outputs.cloud-platform }}
-    #   create-instances-workflow-path: "./.github/workflows/${{ env.cloud-platform }}.yml"
-    # steps:
-    #   - name: echo env
-    #     run: |
-    #       echo ${ cloud-platform }
-    #       echo ${ create-instances-workflow-path }
-      # - uses: ${{ env.create-instances-workflow-path }}
-      #   with:
-      #     cloud-platform: ${{ env.cloud-platform }}
-
-
-
-
     #TODO in the future
     # - name: Create Instance - GCP
     #   if: ${{ matrix.cloud-provisioner }} == 'gcp'

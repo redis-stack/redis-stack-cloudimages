@@ -82,10 +82,10 @@ jobs:
     - name: enable ssh from local ip
       run: |
         LOCAL_IP=$(curl -s http://checkip.amazonaws.com)
-        aws ec2 authorize-security-group-ingress --group-name default --protocol tcp --port 22 --cidr 0.0.0.0/0
+        aws ec2 authorize-security-group-ingress --group-name default --protocol tcp --port 22 --cidr $LOCAL_IP/32
 
     - name: run tests agains ec2 instance - x86
-      uses: appleboy/ssh-action@v0.1.4
+      uses: appleboy/ssh-action@master
       with:
         host: ${{ steps.create_ec2_instance.outputs.public_ip }}
         username: ubuntu
