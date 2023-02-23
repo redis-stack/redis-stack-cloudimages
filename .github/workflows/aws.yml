@@ -105,7 +105,8 @@ jobs:
       with:
         host: ${{ steps.create_ec2_instance.outputs.public_ip }}
         username: ubuntu
-        key: '${{ secrets.SSH_PRIVATE_KEY }}'
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
         script: |
             # Install Python and pip
             sudo apt-get update
