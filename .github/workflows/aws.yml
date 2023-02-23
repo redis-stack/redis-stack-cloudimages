@@ -160,7 +160,7 @@ jobs:
         aws ec2 terminate-instances --instance-ids ${{ steps.create_ec2_instance.outputs.instance_id }} --region ${{ env.redis_stack_x86_region }}
 
     - name: Deregister x86 AMI 
-      if: always() && ${{ inputs.deregister == true }}
+      if: always() && inputs.deregister == true
       run: |
         aws ec2 deregister-image --image-id="${{ env.redis_stack_x86_image_id }}" --region="${{ env.redis_stack_x86_region }}"
       
