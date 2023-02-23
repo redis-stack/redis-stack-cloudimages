@@ -16,6 +16,8 @@ on:
         required: true
       AWS_SECRET_KEY:
         required: true
+      SSH_PRIVATE_KEY:
+        required: true
 
 jobs:
   create-instances:
@@ -53,24 +55,6 @@ jobs:
       run: |
         aws ec2 describe-key-pairs --key-name redis-stack-packer-ci --query 'KeyPairs[*].KeyName' --output text
       id: check-key-pair
-      continue-on-error: true
-
-    - name: Create key pair if it does not exist
-      if: steps.check-key-pair.outcome != 'success'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        aws ec2 create-key-pair --key-name redis-stack-packer-ci --query 'KeyMaterial' --output text > redis-stack-packer-ci.pem
-        # gh secret set SSH_PRIVATE_KEY < redis-stack-packer-ci.pem
-
-    - name: Print message if key pair already exists
-      if: steps.check-key-pair.outcome == 'success'
-      run: echo "Key pair 'redis-stack-packer-ci' already exists, skipping creation."
-
-    - name: store public and private ssh key
-      run: |
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ssh.privatekey
-        chmod 0400 ssh.privatekey
 
     - name: Create an EC2 instance - x86
       id: create_ec2_instance
@@ -101,12 +85,11 @@ jobs:
         aws ec2 authorize-security-group-ingress --group-name default --protocol tcp --port 22 --cidr $LOCAL_IP/32
 
     - name: run tests agains ec2 instance - x86
-      uses: appleboy/ssh-action@v0.1.7
+      uses: appleboy/ssh-action@master
       with:
         host: ${{ steps.create_ec2_instance.outputs.public_ip }}
         username: ubuntu
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: 22
         script: |
             # Install Python and pip
             sudo apt-get update
@@ -162,7 +145,7 @@ jobs:
     - name: Deregister x86 AMI 
       if: always() && inputs.deregister == true
       run: |
-        aws ec2 deregister-image --image-id="${{ env.redis_stack_x86_image_id }}" --region="${{ env.redis_stack_x86_region }}"
+        aws ec2 deregister-image --image-id="${{ env.redis_stack_x86_image_id }}" --region=${{ env.redis_stack_x86_region }}
       
     # - name: Create an EC2 instance - arm
     #   env:

@@ -63,6 +63,7 @@ jobs:
     secrets:
       AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY}}
       AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY}}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY}}
 
     # env:
     #   cloud-platform: ${{ needs.build-image.outputs.cloud-platform }}
