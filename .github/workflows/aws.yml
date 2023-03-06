@@ -83,6 +83,7 @@ jobs:
           if [[ "$status" == "running" ]]; then
             echo "EC2 instance is running"
             break
+
           else
             echo "EC2 instance is not running yet, waiting..."
             sleep 10
@@ -103,7 +104,7 @@ jobs:
     - name: enable ssh from local ip
       run: |
         LOCAL_IP=$(curl -s http://checkip.amazonaws.com)
-        aws ec2 authorize-security-group-ingress --group-name default --protocol tcp --port 22 --cidr 0.0.0.0/32
+        aws ec2 authorize-security-group-ingress --group-name default --protocol tcp --port 22 --cidr ${LOCAL_IP}/32
 
     - name: run tests agains ec2 instance - x86
       uses: appleboy/ssh-action@master
