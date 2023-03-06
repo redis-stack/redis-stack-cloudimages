@@ -74,6 +74,27 @@ jobs:
       run: |
         aws ec2 describe-instances --instance-ids ${{ steps.create_ec2_instance.outputs.instance_id }} --query 'Reservations[*].Instances[*].[PublicIpAddress]' --output text | tr '\t' '\n'
 
+    - name: Wait for EC2 Instance
+      run: |
+        timeout=600 # 10 minute timeout
+        start=$(date +%s)
+        while true; do
+          status=$(aws ec2 describe-instances --instance-ids ${{ steps.create_ec2_instance.outputs.instance_id }} --query 'Reservations[].Instances[].State[].Name' --output text)
+          if [[ "$status" == "running" ]]; then
+            echo "EC2 instance is running"
+            break
+          else
+            echo "EC2 instance is not running yet, waiting..."
+            sleep 10
+          fi
+          now=$(date +%s)
+          elapsed=$((now-start))
+          if [[ $elapsed -gt $timeout ]]; then
+            echo "Timed out waiting for EC2 instance to start"
+            exit 1
+          fi
+        done
+
     - name: echo params
       run: |
         find . -type f -print0 | xargs -0 echo
