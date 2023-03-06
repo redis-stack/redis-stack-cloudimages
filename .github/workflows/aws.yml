@@ -101,10 +101,10 @@ jobs:
         find . -type f -print0 | xargs -0 echo
         ls -la
 
-    - name: enable ssh from local ip
-      run: |
-        LOCAL_IP=$(curl -s http://checkip.amazonaws.com)
-        aws ec2 authorize-security-group-ingress --group-name default --protocol tcp --port 22 --cidr ${LOCAL_IP}/0
+    # - name: enable ssh from local ip
+    #   run: |
+    #     LOCAL_IP=$(curl -s http://checkip.amazonaws.com)
+    #     aws ec2 authorize-security-group-ingress --group-name default --protocol tcp --port 22 --cidr ${LOCAL_IP}/0
 
     - name: run tests agains ec2 instance - x86
       uses: appleboy/ssh-action@master
