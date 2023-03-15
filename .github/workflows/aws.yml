@@ -131,10 +131,10 @@ jobs:
             # Run pytest command
             pipenv run pytest -m 'jammy and not arm'
 
-    - name: Terminate EC2 instance - x86
-      if: always() && steps.create_ec2_instance.outcome == 'success'
-      run: |
-        aws ec2 terminate-instances --instance-ids ${{ steps.create_ec2_instance.outputs.instance_id }} --region ${{ env.redis_stack_x86_region }}
+    # - name: Terminate EC2 instance - x86
+    #   if: always() && steps.create_ec2_instance.outcome == 'success'
+    #   run: |
+    #     aws ec2 terminate-instances --instance-ids ${{ steps.create_ec2_instance.outputs.instance_id }} --region ${{ env.redis_stack_x86_region }}
 
     - name: Deregister x86 AMI 
       if: always() && inputs.deregister == true
