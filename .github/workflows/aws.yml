@@ -105,6 +105,7 @@ jobs:
         sudo apt install redis-tools
         sleep 10
         redis_modules=$(redis-cli module list | wc | awk '{print $1}')
+        echo $redis_modules
         if [ "$redis_modules" -gt 1 ]; then
           echo "Redis has more than one module installed."
         else
@@ -138,10 +139,10 @@ jobs:
             # Run pytest command
             poetry run pytest -m 'osx'
 
-    # - name: Terminate EC2 instance - x86
-    #   if: always() && steps.create_ec2_instance.outcome == 'success'
-    #   run: |
-    #     aws ec2 terminate-instances --instance-ids ${{ steps.create_ec2_instance.outputs.instance_id }} --region ${{ env.redis_stack_x86_region }}
+    - name: Terminate EC2 instance - x86
+      if: always() && steps.create_ec2_instance.outcome == 'success'
+      run: |
+        aws ec2 terminate-instances --instance-ids ${{ steps.create_ec2_instance.outputs.instance_id }} --region ${{ env.redis_stack_x86_region }}
 
     - name: Deregister x86 AMI 
       if: always() && inputs.deregister == true
