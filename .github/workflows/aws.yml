@@ -102,6 +102,7 @@ jobs:
 
     - name: validate modules are installed in redis-erver
       run: |
+        sudo apt install redis-tools
         redis-cli module list |wc|awk '{print $1}'
 
     - name: run tests agains ec2 instance - x86
@@ -115,11 +116,11 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y python3 python3-pip
             
-            # Install poetry
-            pip3 install poetry
-            
             # Clone redis-stack/redis-stack repo
             git clone https://github.com/redis-stack/redis-stack.git
+
+            # Install poetry
+            pip3 install poetry
             
             # Change directory
             cd redis-stack
