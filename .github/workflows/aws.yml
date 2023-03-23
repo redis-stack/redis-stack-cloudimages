@@ -100,10 +100,10 @@ jobs:
         find . -type f -print0 | xargs -0 echo
         ls -la
 
-    - name: validate modules are installed in redis-erver
+    - name: validate modules are installed in redis-server
       run: |
         sudo apt install redis-tools
-        sleep 10
+        sleep 60
         redis_modules=$(redis-cli module list | wc | awk '{print $1}')
         echo $redis_modules
         if [ "$redis_modules" -gt 1 ]; then
@@ -129,12 +129,14 @@ jobs:
 
             # Install poetry
             pip3 install poetry
-            
+            sleep 20
             # Change directory
             cd redis-stack
+            sleep 20
             
             # Install the dependencies
             poetry install
+            sleep 20
             
             # Run pytest command
             poetry run pytest -m 'osx'
