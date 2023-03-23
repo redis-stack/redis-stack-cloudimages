@@ -101,17 +101,22 @@ jobs:
         ls -la
 
     - name: validate modules are installed in redis-server
-      run: |
-        sudo apt install redis-tools
-        sleep 60
-        redis_modules=$(redis-cli module list | wc | awk '{print $1}')
-        echo $redis_modules
-        if [ "$redis_modules" -gt 1 ]; then
-          echo "Redis has more than one module installed."
-        else
-          echo "Redis has no modules installed"
-          exit 1
-        fi
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ steps.create_ec2_instance.outputs.public_ip }}
+        username: ubuntu
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          sudo apt install redis-tools
+          sleep 60
+          redis_modules=$(redis-cli module list | wc | awk '{print $1}')
+          echo $redis_modules
+          if [ "$redis_modules" -gt 1 ]; then
+            echo "Redis has more than one module installed."
+          else
+            echo "Redis has no modules installed"
+            exit 1
+          fi
 
     - name: run tests agains ec2 instance - x86
       uses: appleboy/ssh-action@master
