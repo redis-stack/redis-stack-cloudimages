@@ -100,10 +100,9 @@ jobs:
         find . -type f -print0 | xargs -0 echo
         ls -la
 
-    # - name: enable ssh from local ip
-    #   run: |
-    #     LOCAL_IP=$(curl -s http://checkip.amazonaws.com)
-    #     aws ec2 authorize-security-group-ingress --group-name default --protocol tcp --port 22 --cidr ${LOCAL_IP}/0
+    - name: validate modules are installed in redis-erver
+      run: |
+        redis-cli module list |wc|awk '{print $1}'
 
     - name: run tests agains ec2 instance - x86
       uses: appleboy/ssh-action@master
@@ -116,8 +115,8 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y python3 python3-pip
             
-            # Install pipenv
-            pip3 install pipenv
+            # Install poetry
+            pip3 install poetry
             
             # Clone redis-stack/redis-stack repo
             git clone https://github.com/redis-stack/redis-stack.git
@@ -126,10 +125,10 @@ jobs:
             cd redis-stack
             
             # Install the dependencies
-            pipenv install --dev
+            poetry install
             
             # Run pytest command
-            pipenv run pytest -m 'jammy and not arm'
+            poetry run pytest -m 'osx'
 
     # - name: Terminate EC2 instance - x86
     #   if: always() && steps.create_ec2_instance.outcome == 'success'
