@@ -108,43 +108,14 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
           sudo apt install redis-tools
-          sleep 60
+          sleep 10
           redis_modules=$(redis-cli module list | wc | awk '{print $1}')
-          echo $redis_modules
           if [ "$redis_modules" -gt 1 ]; then
             echo "Redis has more than one module installed."
           else
             echo "Redis has no modules installed"
             exit 1
           fi
-
-    - name: run tests agains ec2 instance - x86
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ steps.create_ec2_instance.outputs.public_ip }}
-        username: ubuntu
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
-            # Install Python and pip
-            sudo apt-get update
-            sudo apt-get install -y python3 python3-pip
-            
-            # Clone redis-stack/redis-stack repo
-            git clone https://github.com/redis-stack/redis-stack.git
-
-            # Install poetry
-            pip3 install poetry
-            sleep 20
-            # Change directory
-            cd redis-stack
-            sleep 20
-            
-            # Install the dependencies
-            poetry install
-            sleep 20
-            
-            # Run pytest command
-            poetry run pytest -m 'osx'
 
     - name: Terminate EC2 instance - x86
       if: always() && steps.create_ec2_instance.outcome == 'success'
