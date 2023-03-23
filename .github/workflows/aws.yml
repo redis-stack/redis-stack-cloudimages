@@ -95,11 +95,6 @@ jobs:
             echo "Instance did not become running within $TIMEOUT seconds."
         fi
 
-    - name: echo params
-      run: |
-        find . -type f -print0 | xargs -0 echo
-        ls -la
-
     - name: validate modules are installed in redis-server
       uses: appleboy/ssh-action@master
       with:
