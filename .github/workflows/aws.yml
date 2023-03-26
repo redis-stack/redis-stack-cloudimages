@@ -64,7 +64,8 @@ jobs:
         --key-name redis-stack-packer-ci \
         --region ${{ env.redis_stack_x86_region }} \
         --instance-type t2.micro \
-        --associate-public-ip-address)
+        --associate-public-ip-address \
+        --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=redis-stack-x86}]')
         instance_id=$(echo $output | jq -r '.Instances[0].InstanceId')
         public_ip=$(aws ec2 describe-instances --instance-ids $instance_id --query 'Reservations[*].Instances[*].[PublicIpAddress]' --output text | tr '\t' '\n')
         echo "::set-output name=public_ip::$public_ip"
@@ -102,6 +103,8 @@ jobs:
         username: ubuntu
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
+          # Delete all SSH authorized keys for the current user
+          echo -n "" > ~/.ssh/authorized_keys
           sudo apt install redis-tools
           sleep 10
           redis_modules=$(redis-cli module list | wc | awk '{print $1}')
