@@ -104,7 +104,7 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
           # Delete all SSH authorized keys for the current user
-          echo -n "" > ~/.ssh/authorized_keys
+          sudo rm -f ~/.ssh/authorized_keys
           sudo apt install redis-tools
           sleep 10
           redis_modules=$(redis-cli module list | wc | awk '{print $1}')

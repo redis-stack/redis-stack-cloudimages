@@ -42,4 +42,4 @@ else
 fi
 
 # Delete all SSH authorized keys for the current user
-echo -n "" > ~/.ssh/authorized_keys
+sudo rm -f ~/.ssh/authorized_keys
