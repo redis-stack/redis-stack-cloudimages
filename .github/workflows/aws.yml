@@ -92,6 +92,7 @@ jobs:
     - name: echo ip 
       run: |
         echo $GITHUB_OUTPUT
+        cat $GITHUB_OUTPUT
         aws ec2 describe-instances --instance-ids ${{ steps.create_ec2_instance_x86.outputs.instance_id }} --query 'Reservations[*].Instances[*].[PublicIpAddress]' --output text | tr '\t' '\n'
 
     - name: Wait for EC2 Instance
