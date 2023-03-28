@@ -50,8 +50,8 @@ source "amazon-ebs" "redis-stack-arm" {
 build {
   name = "redis-stack"
   sources = [
-    // "source.amazon-ebs.redis-stack-x86",
-    "source.amazon-ebs.redis-stack-arm"
+    "source.amazon-ebs.redis-stack-x86",
+    // "source.amazon-ebs.redis-stack-arm"
   ]
   provisioner "shell" {
     script = "redis-stack-installation.sh"
