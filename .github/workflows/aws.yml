@@ -92,7 +92,6 @@ jobs:
     - name: echo ip 
       run: |
         echo $GITHUB_OUTPUT
-        echo ${{create-instances.outputs}}
         echo ${{steps["create_ec2_instance_${{matrix.arch}}"].outputs.instance_id}}
         # aws ec2 describe-instances --instance-ids ${{ steps.create_ec2_instance_x86.outputs.instance_id }} --query 'Reservations[*].Instances[*].[PublicIpAddress]' --output text | tr '\t' '\n'
 
