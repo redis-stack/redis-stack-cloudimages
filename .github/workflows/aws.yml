@@ -117,11 +117,11 @@ jobs:
         username: ubuntu
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
-          # Delete all SSH authorized keys for the current user
           arch=${{ matrix.arch }}
           if [[ $arch == "arm" ]]; then
             sudo redis-stack-server --daemonize yes
           fi
+          # Delete all SSH authorized keys for the current user
           sudo rm -f ~/.ssh/authorized_keys
           sudo apt install redis-tools -y
           sleep 10
@@ -132,6 +132,9 @@ jobs:
             echo "Redis has no modules installed"
             exit 1
           fi
+          # Flush all logs
+          sudo rm /var/log/*
+          sudo systemctl restart rsyslog
 
     - name: Terminate EC2 instance - ${{ matrix.arch }}
       if: always() && steps.create_ec2_instance.outcome == 'success'
