@@ -85,22 +85,6 @@ jobs:
         echo "::set-output name=public_ip::$public_ip"
         echo "::set-output name=instance_id::$instance_id"
 
-    # - name: Create an EC2 instance - arm
-    #   if: ${{ matrix.arch == 'arm' }}
-    #   id: create_ec2_instance
-    #   run: |
-    #     output=$(aws ec2 run-instances \
-    #     --image-id ${{ env.redis_stack_arm_image_id }} \
-    #     --key-name redis-stack-packer-ci \
-    #     --region ${{ env.redis_stack_arm_region }} \
-    #     --instance-type t2.micro \
-    #     --associate-public-ip-address \
-    #     --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=redis-stack-arm}]')
-    #     instance_id=$(echo $output | jq -r '.Instances[0].InstanceId')
-    #     public_ip=$(aws ec2 describe-instances --instance-ids $instance_id --query 'Reservations[*].Instances[*].[PublicIpAddress]' --output text | tr '\t' '\n')
-    #     echo "::set-output name=public_ip::$public_ip"
-    #     echo "::set-output name=instance_id::$instance_id"
-
     - name: echo ip 
       run: |
         aws ec2 describe-instances --instance-ids ${{ steps.create_ec2_instance.outputs.instance_id }} --query 'Reservations[*].Instances[*].[PublicIpAddress]' --output text | tr '\t' '\n'
@@ -139,7 +123,7 @@ jobs:
             sudo redis-stack-server --daemonize yes
           fi
           sudo rm -f ~/.ssh/authorized_keys
-          sudo apt install redis-tools
+          sudo apt install redis-tools -y
           sleep 10
           redis_modules=$(redis-cli module list | wc | awk '{print $1}')
           if [ "$redis_modules" -gt 1 ]; then
@@ -158,44 +142,3 @@ jobs:
       if: always() && inputs.deregister == true
       run: |
         aws ec2 deregister-image --image-id=${{ env.redis_stack_image_id }} --region=${{ env.redis_stack_region }}
-      
-    # - name: Create an EC2 instance - arm
-    #   id: create_ec2_instance_arm
-    #   run: |
-    #     output=$(aws ec2 run-instances \
-    #     --image-id ${{ env.redis_stack_x86_image_id }} \
-    #     --key-name redis-stack-packer-ci \
-    #     --region ${{ env.redis_stack_x86_region }} \
-    #     --instance-type t2.micro \
-    #     --associate-public-ip-address \
-    #     --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=redis-stack-x86}]')
-    #     instance_id=$(echo $output | jq -r '.Instances[0].InstanceId')
-    #     public_ip=$(aws ec2 describe-instances --instance-ids $instance_id --query 'Reservations[*].Instances[*].[PublicIpAddress]' --output text | tr '\t' '\n')
-    #     echo "::set-output name=public_ip::$public_ip"
-    #     echo "::set-output name=instance_id::$instance_id"
-
-    # - name: SSH into the EC2 instance and test - arm
-    #   uses: aws-actions/ssh-action@main
-    #   with:
-    #     host: ${{ steps.create_ec2_instance.outputs.public_ip }}
-    #     username: ubuntu
-    #     key: redis-stack-packer-ci.pem
-    #     commands: |
-    #       # Install Python and pip
-    #       sudo apt-get update
-    #       sudo apt-get install -y python3 python3-pip
-          
-    #       # Install pipenv
-    #       pip3 install pipenv
-          
-    #       # Clone redis-stack/redis-stack repo
-    #       git clone https://github.com/redis-stack/redis-stack.git
-          
-    #       # Change directory
-    #       cd redis-stack
-          
-    #       # Install the dependencies
-    #       pipenv install --dev
-          
-    #       # Run pytest command
-    #       pipenv run pytest -m "jammy"
