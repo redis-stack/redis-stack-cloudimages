@@ -55,7 +55,7 @@ jobs:
   create-instances:
     needs: build-image
     if: ${{ needs.build-image.outputs.cloud-platform == 'aws' }} #workaround until github will support env variables in uses #25246
-    name: Create ${{ needs.build-image.outputs.cloud-platform }} instance from image
+    name: Test redis-stack ${{ needs.build-image.outputs.cloud-platform }} image
     uses: ./.github/workflows/aws.yml
     with:
       cloud-platform: aws

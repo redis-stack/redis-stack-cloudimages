@@ -21,7 +21,7 @@ on:
 
 jobs:
   create-instances:
-    name: Create ${{ matrix.arch }} instance from image
+    name: Test ${{ matrix.arch }} AMI
     runs-on: ubuntu-latest
     strategy:
       matrix:
