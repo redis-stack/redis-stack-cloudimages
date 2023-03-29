@@ -121,6 +121,10 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
           # Delete all SSH authorized keys for the current user
+          arch=${{ matrix.arch }}
+          if [[ $arch == "arm" ]]; then
+            sudo redis-stack-server --daemonize yes
+          fi
           sudo rm -f ~/.ssh/authorized_keys
           sudo apt install redis-tools
           sleep 10
