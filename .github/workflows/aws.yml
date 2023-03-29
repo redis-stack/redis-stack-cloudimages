@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: ['x86']
+        arch: ['x86', 'arm']
     steps:
     - name: Checkout
       uses: actions/checkout@v3
