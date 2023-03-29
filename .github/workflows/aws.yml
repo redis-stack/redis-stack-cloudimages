@@ -23,6 +23,7 @@ jobs:
   create-instances:
     name: Create ${{ matrix.arch }} instance from image
     runs-on: ubuntu-latest
+    continue-on-error: true
     strategy:
       matrix:
         arch: ['x86', 'arm']
@@ -44,6 +45,18 @@ jobs:
         redis_stack_region=$(cat ${{ inputs.cloud-platform }}-artifacts.json | jq -r '.builds[] | select(.name == "redis-stack-${{ matrix.arch }}").artifact_id | split(":") | .[0]' )
         echo "redis_stack_region='${redis_stack_region}'" >> $GITHUB_ENV
 
+    - name: Extract aws instance type - x86
+      if: ${{ matrix.arch == 'x86' }}
+      run: |
+        instance_type='t2.micro'
+        echo "instance_type='${instance_type}'" >> $GITHUB_ENV
+
+    - name: Extract aws instance type - arm
+      if: ${{ matrix.arch == 'arm' }}
+      run: |
+        instance_type='c6g.xlarge'
+        echo "instance_type='${instance_type}'" >> $GITHUB_ENV
+
     #create ssh key for ec2
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -64,7 +77,7 @@ jobs:
         --image-id ${{ env.redis_stack_image_id }} \
         --key-name redis-stack-packer-ci \
         --region ${{ env.redis_stack_region }} \
-        --instance-type t2.micro \
+        --instance-type ${{ env.instance_type }} \
         --associate-public-ip-address \
         --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=redis-stack-${{ matrix.arch }}}]')
         instance_id=$(echo $output | jq -r '.Instances[0].InstanceId')
