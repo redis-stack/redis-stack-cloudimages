@@ -1,0 +1,147 @@
+name: AWS CI
+
+on:
+  workflow_call:
+    inputs:
+      cloud-platform:
+        required: true
+        type: string
+      deregister:
+        required: true
+        type: boolean
+        default: true
+
+    secrets:
+      AWS_ACCESS_KEY:
+        required: true
+      AWS_SECRET_KEY:
+        required: true
+      SSH_PRIVATE_KEY:
+        required: true
+
+jobs:
+  create-instances:
+    name: Test ${{ matrix.arch }} AMI
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: ['x86', 'arm']
+      fail-fast: false
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Download image artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: ${{ inputs.cloud-platform }}-artifacts.json
+
+    - name: Setup jq
+      run: sudo apt-get update && sudo apt-get install -y jq
+
+    - name: Extract image ID's and regions
+      run: |
+        redis_stack_image_id=$(cat ${{ inputs.cloud-platform }}-artifacts.json | jq -r '.builds[] | select(.name == "redis-stack-${{ matrix.arch }}").artifact_id | split(":") | .[1]' )
+        echo "redis_stack_image_id='${redis_stack_image_id}'" >> $GITHUB_ENV
+        redis_stack_region=$(cat ${{ inputs.cloud-platform }}-artifacts.json | jq -r '.builds[] | select(.name == "redis-stack-${{ matrix.arch }}").artifact_id | split(":") | .[0]' )
+        echo "redis_stack_region='${redis_stack_region}'" >> $GITHUB_ENV
+
+    - name: Extract aws instance type - x86
+      if: ${{ matrix.arch == 'x86' }}
+      run: |
+        instance_type='t2.micro'
+        echo "instance_type='${instance_type}'" >> $GITHUB_ENV
+
+    - name: Extract aws instance type - arm
+      if: ${{ matrix.arch == 'arm' }}
+      run: |
+        instance_type='c6g.xlarge'
+        echo "instance_type='${instance_type}'" >> $GITHUB_ENV
+
+    #create ssh key for ec2
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+        aws-region: us-east-1 #until we support multi regions
+
+    - name: check-key-pair
+      run: |
+        aws ec2 describe-key-pairs --key-name redis-stack-packer-ci --query 'KeyPairs[*].KeyName' --output text
+      id: check-key-pair
+
+    - name: Create an EC2 instance - ${{ matrix.arch }}
+      id: create_ec2_instance
+      run: |
+        output=$(aws ec2 run-instances \
+        --image-id ${{ env.redis_stack_image_id }} \
+        --key-name redis-stack-packer-ci \
+        --region ${{ env.redis_stack_region }} \
+        --instance-type ${{ env.instance_type }} \
+        --associate-public-ip-address \
+        --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=redis-stack-${{ matrix.arch }}}]')
+        instance_id=$(echo $output | jq -r '.Instances[0].InstanceId')
+        public_ip=$(aws ec2 describe-instances --instance-ids $instance_id --query 'Reservations[*].Instances[*].[PublicIpAddress]' --output text | tr '\t' '\n')
+        echo "::set-output name=public_ip::$public_ip"
+        echo "::set-output name=instance_id::$instance_id"
+
+    - name: echo ip 
+      run: |
+        aws ec2 describe-instances --instance-ids ${{ steps.create_ec2_instance.outputs.instance_id }} --query 'Reservations[*].Instances[*].[PublicIpAddress]' --output text | tr '\t' '\n'
+
+    - name: Wait for EC2 Instance
+      run: |
+        # Set the timeout value in seconds
+        TIMEOUT=600
+
+        status=$(aws ec2 describe-instances --instance-ids ${{ steps.create_ec2_instance.outputs.instance_id }} --query 'Reservations[].Instances[].State[].Name' --output text)
+        elapsed_time=0
+        while [[ $status != "running" && $elapsed_time -lt $TIMEOUT ]]; do
+          sleep 10
+          elapsed_time=$((elapsed_time + 10))
+          status=$(aws ec2 describe-instances --instance-ids ${{ steps.create_ec2_instance.outputs.instance_id }} --query 'Reservations[].Instances[].State[].Name' --output text)
+        done
+
+        if [[ $status == "running" ]]; then
+            # Wait an additional 60 seconds for safety
+            sleep 60
+            echo "Instance is up and running, and 60 seconds have passed for safety."
+        else
+            echo "Instance did not become running within $TIMEOUT seconds."
+        fi
+
+    - name: validate modules are installed in redis-server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ steps.create_ec2_instance.outputs.public_ip }}
+        username: ubuntu
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          arch=${{ matrix.arch }}
+          if [[ $arch == "arm" ]]; then
+            sudo redis-stack-server --daemonize yes
+          fi
+          # Delete all SSH authorized keys for the current user
+          sudo rm -f ~/.ssh/authorized_keys
+          sudo apt install redis-tools -y
+          sleep 10
+          redis_modules=$(redis-cli module list | wc | awk '{print $1}')
+          if [ "$redis_modules" -gt 1 ]; then
+            echo "Redis has more than one module installed."
+          else
+            echo "Redis has no modules installed"
+            exit 1
+          fi
+          # Flush all logs
+          sudo rm /var/log/*
+          sudo systemctl restart rsyslog
+
+    - name: Terminate EC2 instance - ${{ matrix.arch }}
+      if: always() && steps.create_ec2_instance.outcome == 'success'
+      run: |
+        aws ec2 terminate-instances --instance-ids ${{ steps.create_ec2_instance.outputs.instance_id }} --region ${{ env.redis_stack_region }}
+
+    - name: Deregister ${{ matrix.arch }} AMI 
+      if: always() && inputs.deregister == true
+      run: |
+        aws ec2 deregister-image --image-id=${{ env.redis_stack_image_id }} --region=${{ env.redis_stack_region }}

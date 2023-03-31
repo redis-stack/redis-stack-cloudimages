@@ -8,7 +8,7 @@ packer {
 }
 
 locals {
-  timestamp = formatdate("DD-MM-YYYY", timestamp())
+  timestamp = formatdate("YYYYMMDD-HH-mm", timestamp())
 }
 
 source "amazon-ebs" "redis-stack-x86" {
@@ -54,7 +54,12 @@ build {
     "source.amazon-ebs.redis-stack-arm"
   ]
   provisioner "shell" {
-    script = "../redis-stack-installation.sh"
+    script = "redis-stack-installation.sh"
+  }
+
+  post-processor "manifest" {
+    output     = "aws-artifacts.json"
+    strip_path = true
   }
 }
 

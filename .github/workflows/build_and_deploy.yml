@@ -1,0 +1,79 @@
+name: Packer CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+
+  build-image:
+    name: Build ${{ matrix.cloud-provisioners }} image
+    strategy:
+      matrix:
+        cloud-provisioners: ['aws']
+        # cloud-provisioners: ['aws','gcp','azure']
+      fail-fast: false
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Setup Packer
+      uses: hashicorp/setup-packer@main
+      with:
+        version: latest
+
+    - name: Run `packer init`
+      id: init
+      run: "packer init $GITHUB_WORKSPACE/${{ matrix.cloud-provisioners }}/${{ matrix.cloud-provisioners }}-ubuntu.pkr.hcl"
+
+    - name: Build image
+      run: |
+        packer build $GITHUB_WORKSPACE/${{ matrix.cloud-provisioners }}
+
+    - name: echo params
+      env:
+        cloud: ${{ matrix.cloud-provisioners }}
+      run: |
+        find . -type f -print0 | xargs -0 echo
+
+    - name: Upload image artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.cloud-provisioners }}-artifacts.json
+        path: ./${{ matrix.cloud-provisioners }}-artifacts.json
+    outputs:
+      cloud-platform: ${{ matrix.cloud-provisioners }}
+
+  create-instances:
+    needs: build-image
+    if: ${{ needs.build-image.outputs.cloud-platform == 'aws' }} # workaround until github will support env variables in uses #25246
+    name: Test redis-stack ${{ needs.build-image.outputs.cloud-platform }} image
+    uses: ./.github/workflows/aws.yml
+    with:
+      cloud-platform: aws
+      deregister: true
+    secrets:
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY}}
+      AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY}}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY}}
+
+    #TODO in the future
+    # - name: Create Instance - GCP
+    #   if: ${{ matrix.cloud-provisioner }} == 'gcp'
+    #   run: gcloud compute instances create my-instance --image-project=my-project --image-family=my-image-family
+      
+    # - name: Create Instance - Azure
+    #   if: ${{ matrix.cloud-provisioner }} == 'azure'
+    #   run: az vm create --resource-group myResourceGroup --name myVM --image UbuntuLTS --generate-ssh-keys
+
+#    - name: Publish image
+#      run: |
+        # PUBLISH COMMANDS
