@@ -19,13 +19,19 @@ variable "service_account_file" {
 variable "image_family" {
   description = "Name of the image family to use"
   type        = string
-  default     = "ubuntu-2204-lts"
+  default     = "ubuntu-2004-lts"
 }
 
-variable "machine_type" {
-  description = "The machine type to use"
+variable "machine_type_arm" {
+  description = "The machine type to use for ARM arch"
   type        = string
-  default     = "n1-standard-1"
+  default     = "t2a-standard-2"
+}
+
+variable "machine_type_x86" {
+  description = "The machine type to use for x86 arch"
+  type        = string
+  default     = "n2-standard-2"
 }
 
 variable "ssh_username" {
