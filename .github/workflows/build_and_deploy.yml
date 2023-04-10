@@ -65,7 +65,7 @@ jobs:
       AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY}}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY}}
 
-  test-image:
+  test-image-gcp:
     needs: build-image
     if: ${{ needs.build-image.outputs.cloud-platform == 'gcp' }} # workaround until github will support env variables in uses #25246
     name: Test redis-stack ${{ needs.build-image.outputs.cloud-platform }} image
