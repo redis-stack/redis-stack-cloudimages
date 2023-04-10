@@ -14,7 +14,7 @@ jobs:
     name: Build ${{ matrix.cloud-provisioners }} image
     strategy:
       matrix:
-        cloud-provisioners: ['aws']
+        cloud-provisioners: ['gcp']
         # cloud-provisioners: ['aws','gcp','azure']
       fail-fast: false
     runs-on: ubuntu-latest
@@ -52,7 +52,7 @@ jobs:
     outputs:
       cloud-platform: ${{ matrix.cloud-provisioners }}
 
-  create-instances:
+  create-instances-aws:
     needs: build-image
     if: ${{ needs.build-image.outputs.cloud-platform == 'aws' }} # workaround until github will support env variables in uses #25246
     name: Test redis-stack ${{ needs.build-image.outputs.cloud-platform }} image
@@ -65,10 +65,23 @@ jobs:
       AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY}}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY}}
 
-    #TODO in the future
-    # - name: Create Instance - GCP
-    #   if: ${{ matrix.cloud-provisioner }} == 'gcp'
-    #   run: gcloud compute instances create my-instance --image-project=my-project --image-family=my-image-family
+  test-image:
+    needs: build-image
+    if: ${{ needs.build-image.outputs.cloud-platform == 'gcp' }} # workaround until github will support env variables in uses #25246
+    name: Test redis-stack ${{ needs.build-image.outputs.cloud-platform }} image
+    uses: ./.github/workflows/${{ needs.build-image.outputs.cloud-platform }}.yml
+    with:
+      cloud-platform: ${{ needs.build-image.outputs.cloud-platform }}
+      deregister: true
+    secrets:
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY}}
+      AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY}}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY}}
+      SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY}}
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS}}
+      PROJECT_ID: ${{ secrets.PROJECT_ID}}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT}}
+
       
     # - name: Create Instance - Azure
     #   if: ${{ matrix.cloud-provisioner }} == 'azure'
