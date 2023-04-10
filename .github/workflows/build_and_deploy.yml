@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         cloud-provisioners: ['gcp']
-        # cloud-provisioners: ['aws','gcp','azure']
+        # cloud-provisioners: ['aws','gcp','azure'] 
       fail-fast: false
     runs-on: ubuntu-latest
     env:
