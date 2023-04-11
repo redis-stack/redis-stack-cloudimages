@@ -76,11 +76,8 @@ jobs:
         --zone=us-central1-a \
         --machine-type=${{ env.machine_type }} \
         --image=${{ env.redis_stack_image_id }} \
-        --network-interface=network-tier=PREMIUM,subnet=default \
-        --maintenance-policy=MIGRATE \
-        --provisioning-model=STANDARD \
         --service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} \
-        --metadata=ssh-keys=ubuntu:'${{ secrets.SSH_PUBLIC_KEY }}' \
+        --metadata=ssh-keys=ubuntu:${{ secrets.SSH_PUBLIC_KEY }} \
         --format="get(networkInterfaces[0].accessConfigs[0].natIP)"
         )
         echo $public_ip"
@@ -142,7 +139,7 @@ jobs:
       run: |
         gcloud compute instances delete ${{ env.machine_name }}
 
-    - name: Deregister ${{ matrix.arch }} AMI 
+    - name: Deregister ${{ matrix.arch }} VM
       if: always() && inputs.deregister == true
       run: |
         gcloud compute images delete ${{ env.redis_stack_image_id }}
