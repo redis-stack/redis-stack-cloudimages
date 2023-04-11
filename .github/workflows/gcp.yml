@@ -80,7 +80,7 @@ jobs:
         --maintenance-policy=MIGRATE \
         --provisioning-model=STANDARD \
         --service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} \
-        --metadata=ssh-keys="${{ secrets.SSH_PUBLIC_KEY }}" \
+        --metadata=ssh-keys=ubuntu:'${{ secrets.SSH_PUBLIC_KEY }}' \
         --format="get(networkInterfaces[0].accessConfigs[0].natIP)"
         )
         echo $public_ip"
