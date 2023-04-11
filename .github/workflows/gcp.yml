@@ -88,7 +88,7 @@ jobs:
       run: |
         echo ${{ steps.create_vm.outputs.public_ip }}
 
-    - name: Wait for EC2 Instance
+    - name: Wait for instance
       run: |
         # Set the timeout value in seconds
         TIMEOUT=600
@@ -135,12 +135,12 @@ jobs:
           sudo rm -rf /var/log/*
           sudo systemctl restart rsyslog
 
-    - name: Terminate EC2 instance - ${{ matrix.arch }}
+    - name: Terminate image instance - ${{ matrix.arch }}
       if: always() && steps.create_vm.outcome == 'success'
       run: |
         gcloud compute instances delete ${{ env.machine_name }} --zone=${{ env.zone }}
 
-    - name: Deregister ${{ matrix.arch }} VM
+    - name: Deregister ${{ matrix.arch }} image
       if: always() && inputs.deregister == true
       run: |
         gcloud compute images delete ${{ env.redis_stack_image_id }}
