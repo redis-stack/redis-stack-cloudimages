@@ -53,7 +53,7 @@ jobs:
         path: ./${{ matrix.cloud-provisioners }}-artifacts.json
 
   test-aws-image:
-    needs: build-image
+    needs: build-images
     name: Test redis-stack aws image
     uses: ./.github/workflows/aws.yml
     with:
@@ -65,7 +65,7 @@ jobs:
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY}}
 
   test-gcp-image:
-    needs: build-image
+    needs: build-images
     name: Test redis-stack gcp image
     uses: ./.github/workflows/gcp.yml
     with:
