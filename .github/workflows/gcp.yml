@@ -71,15 +71,7 @@ jobs:
     - name: Create VM - ${{ matrix.arch }}
       id: create_vm
       run: |
-        public_ip=$(gcloud compute instances create ${{ env.machine_name }} \
-        --project=${{ secrets.PROJECT_ID }} \
-        --zone=us-central1-a \
-        --machine-type=${{ env.machine_type }} \
-        --image=${{ env.redis_stack_image_id }} \
-        --service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} \
-        --metadata=ssh-keys=ubuntu:${{ secrets.SSH_PUBLIC_KEY }} \
-        --format="get(networkInterfaces[0].accessConfigs[0].natIP)"
-        )
+        public_ip=$(gcloud compute instances create ${{ env.machine_name }} --project=${{ secrets.PROJECT_ID }} --zone=us-central1-a --machine-type=${{ env.machine_type }} --image=${{ env.redis_stack_image_id }} --service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} --metadata=ssh-keys=ubuntu:"${{ secrets.SSH_PUBLIC_KEY }}" --format="get(networkInterfaces[0].accessConfigs[0].natIP)")
         echo $public_ip"
         echo "::set-output name=public_ip::$public_ip"
 
