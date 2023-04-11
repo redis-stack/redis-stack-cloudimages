@@ -10,7 +10,7 @@ on:
 
 jobs:
 
-  build-image:
+  build-images:
     name: Build ${{ matrix.cloud-provisioners }} image
     strategy:
       matrix:
@@ -51,12 +51,9 @@ jobs:
       with:
         name: ${{ matrix.cloud-provisioners }}-artifacts.json
         path: ./${{ matrix.cloud-provisioners }}-artifacts.json
-    # outputs:
-    #   cloud-platform: ${{ matrix.cloud-provisioners }}
 
-  create-instances-aws:
+  test-aws-image:
     needs: build-image
-    # if: ${{ needs.build-image.outputs.cloud-platform == 'aws' }} # workaround until github will support env variables in uses #25246
     name: Test redis-stack aws image
     uses: ./.github/workflows/aws.yml
     with:
@@ -67,9 +64,8 @@ jobs:
       AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY}}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY}}
 
-  test-image-gcp:
+  test-gcp-image:
     needs: build-image
-    # if: ${{ needs.build-image.outputs.cloud-platform == 'gcp' }} # workaround until github will support env variables in uses #25246
     name: Test redis-stack gcp image
     uses: ./.github/workflows/gcp.yml
     with:
