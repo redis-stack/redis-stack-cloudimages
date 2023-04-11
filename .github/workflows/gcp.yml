@@ -32,6 +32,7 @@ jobs:
       fail-fast: false
     env:
       machine_name: redis-stack-ci-${{ matrix.arch }}
+      zone: us-central1-a #until we will support multi regions
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -73,7 +74,7 @@ jobs:
       run: |
         public_ip=$(gcloud compute instances create ${{ env.machine_name }} \
         --project=${{ secrets.PROJECT_ID }} \
-        --zone=us-central1-a \
+        --zone=${{ env.zone }} \
         --machine-type=${{ env.machine_type }} \
         --image=${{ env.redis_stack_image_id }} \
         --service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} \
@@ -92,12 +93,12 @@ jobs:
         # Set the timeout value in seconds
         TIMEOUT=600
 
-        status=$(gcloud compute instances describe ${{ env.machine_name }} --format='value(status)')
+        status=$(gcloud compute instances describe ${{ env.machine_name }} --zone=${{ env.zone }} --format='value(status)')
         elapsed_time=0
         while [[ $status != "RUNNING" && $elapsed_time -lt $TIMEOUT ]]; do
           sleep 10
           elapsed_time=$((elapsed_time + 10))
-          status=$(gcloud compute instances describe ${{ env.machine_name }} --format='value(status)')
+          status=$(gcloud compute instances describe ${{ env.machine_name }} --zone=${{ env.zone }} --format='value(status)')
         done
 
         if [[ $status == "RUNNING" ]]; then
@@ -137,7 +138,7 @@ jobs:
     - name: Terminate EC2 instance - ${{ matrix.arch }}
       if: always() && steps.create_vm.outcome == 'success'
       run: |
-        gcloud compute instances delete ${{ env.machine_name }}
+        gcloud compute instances delete ${{ env.machine_name }} --zone=${{ env.zone }}
 
     - name: Deregister ${{ matrix.arch }} VM
       if: always() && inputs.deregister == true
