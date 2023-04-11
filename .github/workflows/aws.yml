@@ -133,7 +133,7 @@ jobs:
             exit 1
           fi
           # Flush all logs
-          sudo rm /var/log/*
+          sudo rm -rf /var/log/*
           sudo systemctl restart rsyslog
 
     - name: Terminate EC2 instance - ${{ matrix.arch }}
