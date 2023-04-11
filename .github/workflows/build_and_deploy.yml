@@ -14,7 +14,7 @@ jobs:
     name: Build ${{ matrix.cloud-provisioners }} image
     strategy:
       matrix:
-        cloud-provisioners: ['gcp']
+        cloud-provisioners: ['gcp', 'aws']
         # cloud-provisioners: ['aws','gcp','azure'] 
       fail-fast: false
     runs-on: ubuntu-latest
