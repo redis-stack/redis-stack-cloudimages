@@ -132,8 +132,7 @@ jobs:
             exit 1
           fi
           # Flush all logs
-          sudo rm -rf /var/log/*
-          sudo systemctl restart rsyslog
+          sudo rm /var/log/syslog* /var/log/auth*
 
     - name: Terminate image instance - ${{ matrix.arch }}
       if: always() && steps.create_vm.outcome == 'success'
