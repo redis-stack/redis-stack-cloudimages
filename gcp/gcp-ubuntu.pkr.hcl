@@ -35,7 +35,7 @@ source "googlecompute" "redis-stack-arm" {
 }
 
 build {
-  name = "redis-stack"
+  name = "redis-stack-server"
   sources = [
     "source.googlecompute.redis-stack-x86",
     "source.googlecompute.redis-stack-arm"
