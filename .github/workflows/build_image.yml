@@ -1,0 +1,55 @@
+name: Build Cloud Provisioner Images
+
+on:
+  workflow_call:
+    inputs:
+      cloud-platform:
+        required: true
+        type: string
+
+    secrets:
+      AWS_ACCESS_KEY:
+        required: true
+      AWS_SECRET_KEY:
+        required: true
+      PROJECT_ID:
+        required: true
+      GOOGLE_APPLICATION_CREDENTIALS:
+        required: true
+jobs:
+  build-images:
+    name: Build ${{ inputs.cloud-platform }} image
+    runs-on: ubuntu-latest
+    env: 
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+      PROJECT_ID: ${{ secrets.PROJECT_ID}}
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS}}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Setup Packer
+      uses: hashicorp/setup-packer@main
+      with:
+        version: latest
+
+    - name: Run `packer init`
+      id: init
+      run: "packer init $GITHUB_WORKSPACE/${{ inputs.cloud-platform }}/${{ inputs.cloud-platform }}-ubuntu.pkr.hcl"
+
+    - name: Build image
+      run: |
+        packer build $GITHUB_WORKSPACE/${{ inputs.cloud-platform }}
+
+    - name: echo params
+      env:
+        cloud: ${{ inputs.cloud-platform }}
+      run: |
+        find . -type f -print0 | xargs -0 echo
+
+    - name: Upload image artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ inputs.cloud-platform }}-artifacts.json
+        path: ./${{ inputs.cloud-platform }}-artifacts.json

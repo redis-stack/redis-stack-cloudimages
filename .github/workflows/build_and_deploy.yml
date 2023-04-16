@@ -10,50 +10,30 @@ on:
 
 jobs:
 
-  build-images:
-    name: Build ${{ matrix.cloud-provisioners }} image
-    strategy:
-      matrix:
-        cloud-provisioners: ['gcp', 'aws']
-        # cloud-provisioners: ['aws','gcp','azure'] 
-      fail-fast: false
-    runs-on: ubuntu-latest
-    env:
-      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
-      AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+  build-aws-images:
+    name: Test redis-stack aws image
+    uses: ./.github/workflows/build_image.yml
+    with:
+      cloud-platform: aws
+    secrets:
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY}}
+      AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY}}
       PROJECT_ID: ${{ secrets.PROJECT_ID}}
       GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS}}
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
 
-    - name: Setup Packer
-      uses: hashicorp/setup-packer@main
-      with:
-        version: latest
-
-    - name: Run `packer init`
-      id: init
-      run: "packer init $GITHUB_WORKSPACE/${{ matrix.cloud-provisioners }}/${{ matrix.cloud-provisioners }}-ubuntu.pkr.hcl"
-
-    - name: Build image
-      run: |
-        packer build $GITHUB_WORKSPACE/${{ matrix.cloud-provisioners }}
-
-    - name: echo params
-      env:
-        cloud: ${{ matrix.cloud-provisioners }}
-      run: |
-        find . -type f -print0 | xargs -0 echo
-
-    - name: Upload image artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: ${{ matrix.cloud-provisioners }}-artifacts.json
-        path: ./${{ matrix.cloud-provisioners }}-artifacts.json
+  build-gcp-images:
+    name: Test redis-stack gcp image
+    uses: ./.github/workflows/build_image.yml
+    with:
+      cloud-platform: gcp
+    secrets:
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY}}
+      AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY}}
+      PROJECT_ID: ${{ secrets.PROJECT_ID}}
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS}}
 
   test-aws-image:
-    needs: build-images
+    needs: build-aws-images
     name: Test redis-stack aws image
     uses: ./.github/workflows/aws.yml
     with:
@@ -65,7 +45,7 @@ jobs:
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY}}
 
   test-gcp-image:
-    needs: build-images
+    needs: build-gcp-images
     name: Test redis-stack gcp image
     uses: ./.github/workflows/gcp.yml
     with:
