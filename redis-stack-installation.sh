@@ -44,5 +44,4 @@ fi
 # Delete all SSH authorized keys for the current user
 sudo rm -f ~/.ssh/authorized_keys
 # Flush all logs
-sudo rm /var/log/*
-sudo systemctl restart rsyslog
+sudo rm /var/log/syslog* /var/log/auth*

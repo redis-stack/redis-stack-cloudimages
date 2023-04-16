@@ -133,8 +133,7 @@ jobs:
             exit 1
           fi
           # Flush all logs
-          sudo rm /var/log/*
-          sudo systemctl restart rsyslog
+          sudo rm /var/log/syslog* /var/log/auth*
 
     - name: Terminate EC2 instance - ${{ matrix.arch }}
       if: always() && steps.create_ec2_instance.outcome == 'success'

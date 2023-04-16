@@ -48,7 +48,7 @@ source "amazon-ebs" "redis-stack-arm" {
 }
 
 build {
-  name = "redis-stack"
+  name = "redis-stack-server"
   sources = [
     "source.amazon-ebs.redis-stack-x86",
     "source.amazon-ebs.redis-stack-arm"
