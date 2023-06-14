@@ -10,9 +10,6 @@ on:
         required: true
         type: boolean
         default: true
-      publish:
-        type: boolean
-        default: false
 
     secrets:
       SSH_PRIVATE_KEY:
