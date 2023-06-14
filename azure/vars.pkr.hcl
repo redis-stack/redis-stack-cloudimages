@@ -40,11 +40,12 @@ variable "image_sku" {
   default     = "20_04-lts-gen2"
 }
 
-variable "image_sku_arm" {
-  description = "Azure Image SKU"
-  type        = string
-  default     = "20_04-lts-arm64"
-}
+// Enable when we will support arm
+// variable "image_sku_arm" {
+//   description = "Azure Image SKU"
+//   type        = string
+//   default     = "20_04-lts-arm64"
+// }
 
 variable "location" {
   description = "Azure Region Location"
@@ -58,11 +59,12 @@ variable "vm_size_x64" {
   default     = "Standard_DS2_v2"
 }
 
-variable "vm_size_arm" {
-  description = "Azure Virtual Machine Size for arm"
-  type        = string
-  default     = "Standard_D2ps_v5"
-}
+// Enable when we will support arm
+// variable "vm_size_arm" {
+//   description = "Azure Virtual Machine Size for arm"
+//   type        = string
+//   default     = "Standard_D2ps_v5"
+// }
 
 variable "os_type" {
   description = "Azure OS Type"

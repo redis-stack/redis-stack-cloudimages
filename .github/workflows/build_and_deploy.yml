@@ -20,6 +20,10 @@ jobs:
       AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY}}
       PROJECT_ID: ${{ secrets.PROJECT_ID}}
       GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS}}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
   build-gcp-images:
     name: Test redis-stack gcp image
@@ -31,6 +35,25 @@ jobs:
       AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY}}
       PROJECT_ID: ${{ secrets.PROJECT_ID}}
       GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS}}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+  build-azure-images:
+    name: Test redis-stack azure image
+    uses: ./.github/workflows/build_image.yml
+    with:
+      cloud-platform: azure
+    secrets:
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY}}
+      AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY}}
+      PROJECT_ID: ${{ secrets.PROJECT_ID}}
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS}}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
   test-aws-image:
     needs: build-aws-images
@@ -39,6 +62,7 @@ jobs:
     with:
       cloud-platform: aws
       deregister: true
+      publish: false
     secrets:
       AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY}}
       AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY}}
@@ -58,7 +82,22 @@ jobs:
       PROJECT_ID: ${{ secrets.PROJECT_ID}}
       GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT}}
 
-      
+  test-azure-image:
+    needs: build-azure-images
+    name: Test redis-stack azure image
+    uses: ./.github/workflows/azure.yml
+    with:
+      cloud-platform: azure
+      deregister: true
+    secrets:
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY}}
+      SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY}}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+
     # - name: Create Instance - Azure
     #   if: ${{ matrix.cloud-provisioner }} == 'azure'
     #   run: az vm create --resource-group myResourceGroup --name myVM --image UbuntuLTS --generate-ssh-keys
