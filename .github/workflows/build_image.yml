@@ -29,7 +29,7 @@ jobs:
   build-images:
     name: Build ${{ inputs.cloud-platform }} image
     runs-on: ubuntu-latest
-    env: 
+    env:
       AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
       AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
       PROJECT_ID: ${{ secrets.PROJECT_ID}}
@@ -38,7 +38,8 @@ jobs:
       AZURE_CLIENT_ID: ${{secrets.AZURE_CLIENT_ID}}
       AZURE_CLIENT_SECRET: ${{secrets.AZURE_CLIENT_SECRET}}
       AZURE_TENANT_ID: ${{secrets.AZURE_TENANT_ID}}
-
+    
+    steps:
     - name: Checkout
       uses: actions/checkout@v3
 
