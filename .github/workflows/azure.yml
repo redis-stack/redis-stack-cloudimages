@@ -44,6 +44,12 @@ jobs:
         with:
           name: ${{ inputs.cloud-platform }}-artifacts.json
 
+      - name: store public and private ssh key
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ssh.privatekey
+          chmod 0400 ssh.privatekey
+          ssh-keygen -f ssh.privatekey -y > ssh.publickey
+
       - name: Setup jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
@@ -51,8 +57,10 @@ jobs:
         run: |
           redis_stack_image_id=$(cat ${{ inputs.cloud-platform }}-artifacts.json | jq -r '.builds[] | select(.name == "redis-stack-${{ matrix.arch }}").artifact_id' )
           echo "redis_stack_image_id='${redis_stack_image_id}'" >> $GITHUB_ENV
+          redis_stack_image_name=$(echo "$redis_stack_image_id" | sed 's/.*\///')
+          echo "redis_stack_image_name='${redis_stack_image_name}'" >> $GITHUB_ENV
 
-      - name: Extract gcp machine type - x64
+      - name: Extract Azure machine type - x64
         if: ${{ matrix.arch == 'x64' }}
         run: |
           machine_type='Standard_DS2_v2'
@@ -67,14 +75,14 @@ jobs:
         id: create_vm
         run: |
           vm_info=$(az vm create --resource-group ${{ env.resource_group }} \
-                       --name ${{ env.machine_name }} \
+                       --name "${{ env.machine_name }}" \
                        --image ${{ env.redis_stack_image_id }} \
-                       --public-ip-sku Standard \
-                       --admin-username ubuntu \
-                       --nic-delete-option delete \
-                       --data-disk-delete-option delete \
-                       --os-disk-delete-option delete \
-                       --ssh-key-value ${secrets.SSH_PUBLIC_KEY})
+                       --public-ip-sku "Standard" \
+                       --admin-username "ubuntu" \
+                       --nic-delete-option "delete" \
+                       --data-disk-delete-option "delete" \
+                       --os-disk-delete-option "delete" \
+                       --ssh-key-value "./ssh.publickey" )
           public_ip=$(echo $vm_info | jq -r '.publicIpAddress')
           echo $public_ip
           echo "::set-output name=public_ip::$public_ip"
@@ -145,4 +153,4 @@ jobs:
         #TODO update this to azure
         if: always() && inputs.deregister == true
         run: |
-          gcloud compute images delete ${{ env.redis_stack_image_id }}
+          az image delete -g ${{ env.resource_group }} -n ${{ env.redis_stack_image_name }}
