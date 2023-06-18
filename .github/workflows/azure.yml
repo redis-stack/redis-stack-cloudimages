@@ -142,12 +142,12 @@ jobs:
       - name: Terminate image instance - ${{ matrix.arch }}
         if: always() && steps.create_vm.outcome == 'success'
         run: |
-          az network nsg delete -g ${{ env.resource_group }} -n ${{ env.machine_name }}NSG
-          az network vnet delete -g ${{ env.resource_group }} -n ${{ env.machine_name }}VNET
-          az network public-ip delete -g ${{ env.resource_group }} -n ${{ steps.create_vm.outputs.public_ip }}
           az vm delete --resource-group ${{ env.resource_group }} \
                        --name ${{ env.machine_name }} \
                        -y
+          az network nsg delete -g ${{ env.resource_group }} -n ${{ env.machine_name }}NSG
+          az network vnet delete -g ${{ env.resource_group }} -n ${{ env.machine_name }}VNET
+          az network public-ip delete -g ${{ env.resource_group }} -n ${{ steps.create_vm.outputs.public_ip }}
 
       - name: Deregister ${{ matrix.arch }} image
         #TODO update this to azure
