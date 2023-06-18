@@ -1,0 +1,156 @@
+name: AZURE CI
+
+on:
+  workflow_call:
+    inputs:
+      cloud-platform:
+        required: true
+        type: string
+      deregister:
+        required: true
+        type: boolean
+        default: true
+
+    secrets:
+      SSH_PRIVATE_KEY:
+        required: true
+      SSH_PUBLIC_KEY:
+        required: true
+      AZURE_SUBSCRIPTION_ID:
+        required: true
+      AZURE_CLIENT_ID:
+        required: true
+      AZURE_CLIENT_SECRET:
+        required: true
+      AZURE_TENANT_ID:
+        required: true
+jobs:
+  test-image:
+    name: Test ${{ matrix.arch }} image
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: ["x64"]
+      fail-fast: false
+    env:
+      machine_name: redis-stack-ci-${{ matrix.arch }}
+      zone: eastus #until we will support multi regions
+      resource_group: redisStackCloudImages
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Download image artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ inputs.cloud-platform }}-artifacts.json
+
+      - name: store public and private ssh key
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ssh.privatekey
+          chmod 0400 ssh.privatekey
+          ssh-keygen -f ssh.privatekey -y > ssh.publickey
+
+      - name: Setup jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Extract image ID
+        run: |
+          redis_stack_image_id=$(cat ${{ inputs.cloud-platform }}-artifacts.json | jq -r '.builds[] | select(.name == "redis-stack-${{ matrix.arch }}").artifact_id' )
+          echo "redis_stack_image_id='${redis_stack_image_id}'" >> $GITHUB_ENV
+          redis_stack_image_name=$(echo "$redis_stack_image_id" | sed 's/.*\///')
+          echo "redis_stack_image_name='${redis_stack_image_name}'" >> $GITHUB_ENV
+
+      - name: Extract Azure machine type - x64
+        if: ${{ matrix.arch == 'x64' }}
+        run: |
+          machine_type='Standard_DS2_v2'
+          echo "machine_type='${machine_type}'" >> $GITHUB_ENV
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
+
+      - name: Create VM - ${{ matrix.arch }}
+        id: create_vm
+        run: |
+          vm_info=$(az vm create --resource-group ${{ env.resource_group }} \
+                       --name "${{ env.machine_name }}" \
+                       --image ${{ env.redis_stack_image_id }} \
+                       --public-ip-sku "Standard" \
+                       --admin-username "ubuntu" \
+                       --nic-delete-option "delete" \
+                       --data-disk-delete-option "delete" \
+                       --os-disk-delete-option "delete" \
+                       --ssh-key-value "./ssh.publickey" )
+          public_ip=$(echo $vm_info | jq -r '.publicIpAddress')
+          echo $public_ip
+          echo "::set-output name=public_ip::$public_ip"
+
+      - name: echo ip
+        run: |
+          echo ${{ steps.create_vm.outputs.public_ip }}
+
+      - name: Wait for instance
+        run: |
+          # Set the timeout value in seconds
+          TIMEOUT=600
+
+          status=$(az vm list -d --query "[?name=='${{ env.machine_name }}'].powerState" -o tsv)
+          elapsed_time=0
+          while [[ $status != "VM running" && $elapsed_time -lt $TIMEOUT ]]; do
+            sleep 10
+            elapsed_time=$((elapsed_time + 10))
+            status=$(az vm list -d --query "[?name=='${{ env.machine_name }}'].powerState" -o tsv)
+          done
+
+          if [[ $status == "VM running" ]]; then
+              # Wait an additional 60 seconds for safety
+              sleep 60
+              echo "Instance is up and running, and 60 seconds have passed for safety."
+          else
+              echo "Instance did not become running within $TIMEOUT seconds."
+          fi
+
+      - name: validate modules are installed in redis-server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ steps.create_vm.outputs.public_ip }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            sudo redis-stack-server --daemonize yes
+            # Delete all SSH authorized keys for the current user
+            sudo rm -f ~/.ssh/authorized_keys
+            sudo apt install redis-tools -y
+            sleep 10
+            redis_modules=$(redis-cli module list | wc | awk '{print $1}')
+            if [ "$redis_modules" -gt 1 ]; then
+              echo "Redis has more than one module installed."
+            else
+              echo "Redis has no modules installed"
+              exit 1
+            fi
+            # Flush all logs
+            sudo rm /var/log/syslog* /var/log/auth*
+
+      # #TODO input publish into azure Gallery
+      # - name: Publish the inage into redisStackCloudImages gallery
+      #   if: inputs.publish == true
+      #   run: |
+
+      - name: Terminate image instance - ${{ matrix.arch }}
+        if: always() && steps.create_vm.outcome == 'success'
+        run: |
+          az vm delete --resource-group ${{ env.resource_group }} \
+                       --name ${{ env.machine_name }} \
+                       -y
+          az network nsg delete -g ${{ env.resource_group }} -n ${{ env.machine_name }}NSG
+          az network vnet delete -g ${{ env.resource_group }} -n ${{ env.machine_name }}VNET
+          az network public-ip delete -g ${{ env.resource_group }} -n ${{ env.machine_name }}PublicIP
+
+      - name: Deregister ${{ matrix.arch }} image
+        #TODO update this to azure
+        if: always() && inputs.deregister == true
+        run: |
+          az image delete -g ${{ env.resource_group }} -n ${{ env.redis_stack_image_name }}

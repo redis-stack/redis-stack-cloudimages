@@ -16,15 +16,29 @@ on:
         required: true
       GOOGLE_APPLICATION_CREDENTIALS:
         required: true
+      AZURE_SUBSCRIPTION_ID:
+        required: true
+      AZURE_CLIENT_ID:
+        required: true
+      AZURE_CLIENT_SECRET:
+        required: true
+      AZURE_TENANT_ID:
+        required: true
+
 jobs:
   build-images:
     name: Build ${{ inputs.cloud-platform }} image
     runs-on: ubuntu-latest
-    env: 
+    env:
       AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
       AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
       PROJECT_ID: ${{ secrets.PROJECT_ID}}
       GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS}}
+      AZURE_SUBSCRIPTION_ID: ${{secrets.AZURE_SUBSCRIPTION_ID}}
+      AZURE_CLIENT_ID: ${{secrets.AZURE_CLIENT_ID}}
+      AZURE_CLIENT_SECRET: ${{secrets.AZURE_CLIENT_SECRET}}
+      AZURE_TENANT_ID: ${{secrets.AZURE_TENANT_ID}}
+    
     steps:
     - name: Checkout
       uses: actions/checkout@v3

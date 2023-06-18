@@ -1,4 +1,4 @@
-name: AWS CI
+name: GCP CI
 
 on:
   workflow_call:
