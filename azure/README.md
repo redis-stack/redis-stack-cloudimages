@@ -13,10 +13,10 @@ Before you can use this configuration, make sure you have the following prerequi
 3. Set up the necessary environment variables with your Azure credentials:
 
 ```bash
-export ARM_CLIENT_ID=<your client ID>
-export ARM_CLIENT_SECRET=<your client secret>
-export ARM_SUBSCRIPTION_ID=<your subscription ID>
-export ARM_TENANT_ID=<your tenant ID>
+export AZURE_CLIENT_ID=<your client ID>
+export AZURE_CLIENT_SECRET=<your client secret>
+export AZURE_SUBSCRIPTION_ID=<your subscription ID>
+export AZURE_TENANT_ID=<your tenant ID>
 ```
 
 ## Usage

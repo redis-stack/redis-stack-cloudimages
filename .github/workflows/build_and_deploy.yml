@@ -10,35 +10,35 @@ on:
 
 jobs:
 
-  # build-aws-images:
-  #   name: Test redis-stack aws image
-  #   uses: ./.github/workflows/build_image.yml
-  #   with:
-  #     cloud-platform: aws
-  #   secrets:
-  #     AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY}}
-  #     AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY}}
-  #     PROJECT_ID: ${{ secrets.PROJECT_ID}}
-  #     GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS}}
-  #     AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  #     AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-  #     AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-  #     AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  build-aws-images:
+    name: Test redis-stack aws image
+    uses: ./.github/workflows/build_image.yml
+    with:
+      cloud-platform: aws
+    secrets:
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY}}
+      AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY}}
+      PROJECT_ID: ${{ secrets.PROJECT_ID}}
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS}}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
-  # build-gcp-images:
-  #   name: Test redis-stack gcp image
-  #   uses: ./.github/workflows/build_image.yml
-  #   with:
-  #     cloud-platform: gcp
-  #   secrets:
-  #     AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY}}
-  #     AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY}}
-  #     PROJECT_ID: ${{ secrets.PROJECT_ID}}
-  #     GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS}}
-  #     AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  #     AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-  #     AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-  #     AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  build-gcp-images:
+    name: Test redis-stack gcp image
+    uses: ./.github/workflows/build_image.yml
+    with:
+      cloud-platform: gcp
+    secrets:
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY}}
+      AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY}}
+      PROJECT_ID: ${{ secrets.PROJECT_ID}}
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS}}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
   build-azure-images:
     name: Test redis-stack azure image
@@ -55,31 +55,31 @@ jobs:
       AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
-  # test-aws-image:
-  #   needs: build-aws-images
-  #   name: Test redis-stack aws image
-  #   uses: ./.github/workflows/aws.yml
-  #   with:
-  #     cloud-platform: aws
-  #     deregister: true
-  #   secrets:
-  #     AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY}}
-  #     AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY}}
-  #     SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY}}
+  test-aws-image:
+    needs: build-aws-images
+    name: Test redis-stack aws image
+    uses: ./.github/workflows/aws.yml
+    with:
+      cloud-platform: aws
+      deregister: true
+    secrets:
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY}}
+      AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY}}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY}}
 
-  # test-gcp-image:
-  #   needs: build-gcp-images
-  #   name: Test redis-stack gcp image
-  #   uses: ./.github/workflows/gcp.yml
-  #   with:
-  #     cloud-platform: gcp
-  #     deregister: true
-  #   secrets:
-  #     SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY}}
-  #     SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY}}
-  #     GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS}}
-  #     PROJECT_ID: ${{ secrets.PROJECT_ID}}
-  #     GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT}}
+  test-gcp-image:
+    needs: build-gcp-images
+    name: Test redis-stack gcp image
+    uses: ./.github/workflows/gcp.yml
+    with:
+      cloud-platform: gcp
+      deregister: true
+    secrets:
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY}}
+      SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY}}
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS}}
+      PROJECT_ID: ${{ secrets.PROJECT_ID}}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT}}
 
   test-azure-image:
     needs: build-azure-images
