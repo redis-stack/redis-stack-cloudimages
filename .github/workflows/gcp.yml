@@ -28,118 +28,118 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: ['x86', 'arm']
+        arch: ["x86", "arm"]
       fail-fast: false
     env:
       machine_name: redis-stack-ci-${{ matrix.arch }}
       zone: us-central1-a #until we will support multi regions
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-    - name: Download image artifacts
-      uses: actions/download-artifact@v2
-      with:
-        name: ${{ inputs.cloud-platform }}-artifacts.json
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Download image artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ inputs.cloud-platform }}-artifacts.json
 
-    - name: Setup jq
-      run: sudo apt-get update && sudo apt-get install -y jq
+      - name: Setup jq
+        run: sudo apt-get update && sudo apt-get install -y jq
 
-    - name: Extract image ID
-      run: |
-        redis_stack_image_id=$(cat ${{ inputs.cloud-platform }}-artifacts.json | jq -r '.builds[] | select(.name == "redis-stack-${{ matrix.arch }}").artifact_id' )
-        echo "redis_stack_image_id='${redis_stack_image_id}'" >> $GITHUB_ENV
+      - name: Extract image ID
+        run: |
+          redis_stack_image_id=$(cat ${{ inputs.cloud-platform }}-artifacts.json | jq -r '.builds[] | select(.name == "redis-stack-${{ matrix.arch }}").artifact_id' )
+          echo "redis_stack_image_id='${redis_stack_image_id}'" >> $GITHUB_ENV
 
-    - name: Extract gcp machine type - x86
-      if: ${{ matrix.arch == 'x86' }}
-      run: |
-        machine_type='n2-standard-2'
-        echo "machine_type='${machine_type}'" >> $GITHUB_ENV
+      - name: Extract gcp machine type - x86
+        if: ${{ matrix.arch == 'x86' }}
+        run: |
+          machine_type='n2-standard-2'
+          echo "machine_type='${machine_type}'" >> $GITHUB_ENV
 
-    - name: Extract gcp machine type - arm
-      if: ${{ matrix.arch == 'arm' }}
-      run: |
-        machine_type='t2a-standard-2'
-        echo "machine_type='${machine_type}'" >> $GITHUB_ENV
+      - name: Extract gcp machine type - arm
+        if: ${{ matrix.arch == 'arm' }}
+        run: |
+          machine_type='t2a-standard-2'
+          echo "machine_type='${machine_type}'" >> $GITHUB_ENV
 
-    - id: 'auth'
-      uses: 'google-github-actions/auth@v1'
-      with:
-        credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
+      - id: "auth"
+        uses: "google-github-actions/auth@v1"
+        with:
+          credentials_json: "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}"
 
-    - name: 'Set up Cloud SDK'
-      uses: 'google-github-actions/setup-gcloud@v1'
+      - name: "Set up Cloud SDK"
+        uses: "google-github-actions/setup-gcloud@v1"
 
-    - name: Create VM - ${{ matrix.arch }}
-      id: create_vm
-      run: |
-        public_ip=$(gcloud compute instances create ${{ env.machine_name }} \
-        --project=${{ secrets.PROJECT_ID }} \
-        --zone=${{ env.zone }} \
-        --machine-type=${{ env.machine_type }} \
-        --image=${{ env.redis_stack_image_id }} \
-        --service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} \
-        --metadata=ssh-keys=ubuntu:"${{ secrets.SSH_PUBLIC_KEY }}" \
-        --format="get(networkInterfaces[0].accessConfigs[0].natIP)"
-        )
-        echo $public_ip
-        echo "::set-output name=public_ip::$public_ip"
+      - name: Create VM - ${{ matrix.arch }}
+        id: create_vm
+        run: |
+          public_ip=$(gcloud compute instances create ${{ env.machine_name }} \
+          --project=${{ secrets.PROJECT_ID }} \
+          --zone=${{ env.zone }} \
+          --machine-type=${{ env.machine_type }} \
+          --image=${{ env.redis_stack_image_id }} \
+          --service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} \
+          --metadata=ssh-keys=ubuntu:"${{ secrets.SSH_PUBLIC_KEY }}" \
+          --format="get(networkInterfaces[0].accessConfigs[0].natIP)"
+          )
+          echo $public_ip
+          echo "::set-output name=public_ip::$public_ip"
 
-    - name: echo ip 
-      run: |
-        echo ${{ steps.create_vm.outputs.public_ip }}
+      - name: echo ip
+        run: |
+          echo ${{ steps.create_vm.outputs.public_ip }}
 
-    - name: Wait for instance
-      run: |
-        # Set the timeout value in seconds
-        TIMEOUT=600
+      - name: Wait for instance
+        run: |
+          # Set the timeout value in seconds
+          TIMEOUT=600
 
-        status=$(gcloud compute instances describe ${{ env.machine_name }} --zone=${{ env.zone }} --format='value(status)')
-        elapsed_time=0
-        while [[ $status != "RUNNING" && $elapsed_time -lt $TIMEOUT ]]; do
-          sleep 10
-          elapsed_time=$((elapsed_time + 10))
           status=$(gcloud compute instances describe ${{ env.machine_name }} --zone=${{ env.zone }} --format='value(status)')
-        done
+          elapsed_time=0
+          while [[ $status != "RUNNING" && $elapsed_time -lt $TIMEOUT ]]; do
+            sleep 10
+            elapsed_time=$((elapsed_time + 10))
+            status=$(gcloud compute instances describe ${{ env.machine_name }} --zone=${{ env.zone }} --format='value(status)')
+          done
 
-        if [[ $status == "RUNNING" ]]; then
-            # Wait an additional 60 seconds for safety
-            sleep 60
-            echo "Instance is up and running, and 60 seconds have passed for safety."
-        else
-            echo "Instance did not become running within $TIMEOUT seconds."
-        fi
-
-    - name: validate modules are installed in redis-server
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ steps.create_vm.outputs.public_ip }}
-        username: ubuntu
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
-          arch=${{ matrix.arch }}
-          if [[ $arch == "arm" ]]; then
-            sudo redis-stack-server --daemonize yes
-          fi
-          # Delete all SSH authorized keys for the current user
-          sudo rm -f ~/.ssh/authorized_keys
-          sudo apt install redis-tools -y
-          sleep 10
-          redis_modules=$(redis-cli module list | wc | awk '{print $1}')
-          if [ "$redis_modules" -gt 1 ]; then
-            echo "Redis has more than one module installed."
+          if [[ $status == "RUNNING" ]]; then
+              # Wait an additional 60 seconds for safety
+              sleep 60
+              echo "Instance is up and running, and 60 seconds have passed for safety."
           else
-            echo "Redis has no modules installed"
-            exit 1
+              echo "Instance did not become running within $TIMEOUT seconds."
           fi
-          # Flush all logs
-          sudo rm /var/log/syslog* /var/log/auth*
 
-    - name: Terminate image instance - ${{ matrix.arch }}
-      if: always() && steps.create_vm.outcome == 'success'
-      run: |
-        gcloud compute instances delete ${{ env.machine_name }} --zone=${{ env.zone }}
+      - name: validate modules are installed in redis-server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ steps.create_vm.outputs.public_ip }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            arch=${{ matrix.arch }}
+            if [[ $arch == "arm" ]]; then
+              sudo redis-stack-server --daemonize yes
+            fi
+            # Delete all SSH authorized keys for the current user
+            sudo rm -f ~/.ssh/authorized_keys
+            sudo apt install redis-tools -y
+            sleep 10
+            redis_modules=$(redis-cli module list | wc | awk '{print $1}')
+            if [ "$redis_modules" -gt 1 ]; then
+              echo "Redis has more than one module installed."
+            else
+              echo "Redis has no modules installed"
+              exit 1
+            fi
+            # Flush all logs
+            sudo rm /var/log/syslog* /var/log/auth*
 
-    - name: Deregister ${{ matrix.arch }} image
-      if: always() && inputs.deregister == true
-      run: |
-        gcloud compute images delete ${{ env.redis_stack_image_id }}
+      - name: Terminate image instance - ${{ matrix.arch }}
+        if: always() && steps.create_vm.outcome == 'success'
+        run: |
+          gcloud compute instances delete ${{ env.machine_name }} --zone=${{ env.zone }}
+
+      - name: Deregister ${{ matrix.arch }} image
+        if: always() && inputs.deregister == true
+        run: |
+          gcloud compute images delete ${{ env.redis_stack_image_id }}

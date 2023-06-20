@@ -38,32 +38,26 @@ jobs:
       AZURE_CLIENT_ID: ${{secrets.AZURE_CLIENT_ID}}
       AZURE_CLIENT_SECRET: ${{secrets.AZURE_CLIENT_SECRET}}
       AZURE_TENANT_ID: ${{secrets.AZURE_TENANT_ID}}
-    
+
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    - name: Setup Packer
-      uses: hashicorp/setup-packer@main
-      with:
-        version: latest
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@main
+        with:
+          version: latest
 
-    - name: Run `packer init`
-      id: init
-      run: "packer init $GITHUB_WORKSPACE/${{ inputs.cloud-platform }}/${{ inputs.cloud-platform }}-ubuntu.pkr.hcl"
+      - name: Run `packer init`
+        id: init
+        run: "packer init $GITHUB_WORKSPACE/${{ inputs.cloud-platform }}/${{ inputs.cloud-platform }}-ubuntu.pkr.hcl"
 
-    - name: Build image
-      run: |
-        packer build $GITHUB_WORKSPACE/${{ inputs.cloud-platform }}
+      - name: Build image
+        run: |
+          packer build $GITHUB_WORKSPACE/${{ inputs.cloud-platform }}
 
-    - name: echo params
-      env:
-        cloud: ${{ inputs.cloud-platform }}
-      run: |
-        find . -type f -print0 | xargs -0 echo
-
-    - name: Upload image artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: ${{ inputs.cloud-platform }}-artifacts.json
-        path: ./${{ inputs.cloud-platform }}-artifacts.json
+      - name: Upload image artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ inputs.cloud-platform }}-artifacts.json
+          path: ./${{ inputs.cloud-platform }}-artifacts.json
