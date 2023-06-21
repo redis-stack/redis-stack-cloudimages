@@ -4,10 +4,10 @@ This repository is responsible for creating various cloud images, containing ver
 
 ## Cloud Provisioners
 
-- [AWS](aws/README.MD): This cloud provisioner documentation provides instructions for building custom images on AWS using Packer. It includes prerequisites, such as installing Packer and the required plugin, and provides details on setting up AWS access keys. Refer to the AWS documentation for more information.
+- [AWS](aws/README.MD): Instructions for building AWS images with packer.
 
-- [Azure](azure/README.MD): The Azure cloud provisioner documentation explains how to build custom images on Azure using Packer. It covers prerequisites, including installing Packer and the Azure plugin, and provides guidance on setting up Azure credentials. Visit the Azure documentation for further details.
+- [Azure](azure/README.MD): Instructions for building Azure images with packer.
 
-- [GCP](gcp/README.MD): The GCP cloud provisioner documentation explains how to build custom images on GCP using Packer. It covers prerequisites, including installing Packer and the GCP plugin, and provides guidance on setting up GCP credentials. Visit the GCP documentation for further details.
+- [GCP](gcp/README.MD): Instructions for building GCP images with packer.
 
 By following the links above, you can access the respective cloud provisioner's documentation, which will provide you with specific instructions and usage guidelines for building the corresponding cloud images.

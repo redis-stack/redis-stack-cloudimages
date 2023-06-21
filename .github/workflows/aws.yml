@@ -27,6 +27,9 @@ jobs:
       matrix:
         arch: ["x86", "arm"]
       fail-fast: false
+    env:
+      arm_instance_type: c6g.medium
+      x86_instance_type: t2.micro
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -48,14 +51,12 @@ jobs:
       - name: Extract aws instance type - x86
         if: ${{ matrix.arch == 'x86' }}
         run: |
-          instance_type='t2.micro'
-          echo "instance_type='${instance_type}'" >> $GITHUB_ENV
+          echo "instance_type='${{ env.x86_instance_type }}'" >> $GITHUB_ENV
 
       - name: Extract aws instance type - arm
         if: ${{ matrix.arch == 'arm' }}
         run: |
-          instance_type='c6g.xlarge'
-          echo "instance_type='${instance_type}'" >> $GITHUB_ENV
+          echo "instance_type='${{ env.arm_instance_type }}'" >> $GITHUB_ENV
 
       #create ssh key for ec2
       - name: Configure AWS Credentials
@@ -64,11 +65,6 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           aws-region: us-east-1 #until we support multi regions
-
-      - name: check-key-pair
-        run: |
-          aws ec2 describe-key-pairs --key-name redis-stack-packer-ci --query 'KeyPairs[*].KeyName' --output text
-        id: check-key-pair
 
       - name: Create an EC2 instance - ${{ matrix.arch }}
         id: create_ec2_instance
@@ -110,6 +106,15 @@ jobs:
               echo "Instance did not become running within $TIMEOUT seconds."
           fi
 
+      - name: copy validation script via ssh password
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ steps.create_ec2_instance.outputs.public_ip }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "./redis-stack-validation.sh"
+          target: "/home/ubuntu"
+
       - name: validate modules are installed in redis-server
         uses: appleboy/ssh-action@master
         with:
@@ -121,19 +126,8 @@ jobs:
             if [[ $arch == "arm" ]]; then
               sudo redis-stack-server --daemonize yes
             fi
-            # Delete all SSH authorized keys for the current user
-            sudo rm -f ~/.ssh/authorized_keys
-            sudo apt install redis-tools -y
-            sleep 10
-            redis_modules=$(redis-cli module list | wc | awk '{print $1}')
-            if [ "$redis_modules" -gt 1 ]; then
-              echo "Redis has more than one module installed."
-            else
-              echo "Redis has no modules installed"
-              exit 1
-            fi
-            # Flush all logs
-            sudo rm /var/log/syslog* /var/log/auth*
+            chmod +x /home/ubuntu/redis-stack-validation.sh
+            /home/ubuntu/redis-stack-validation.sh
 
       - name: Terminate EC2 instance - ${{ matrix.arch }}
         if: always() && steps.create_ec2_instance.outcome == 'success'

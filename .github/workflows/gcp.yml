@@ -33,6 +33,8 @@ jobs:
     env:
       machine_name: redis-stack-ci-${{ matrix.arch }}
       zone: us-central1-a #until we will support multi regions
+      x86_instance_type: n2-standard-2
+      arm_instance_type: t2a-standard-2
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -52,14 +54,12 @@ jobs:
       - name: Extract gcp machine type - x86
         if: ${{ matrix.arch == 'x86' }}
         run: |
-          machine_type='n2-standard-2'
-          echo "machine_type='${machine_type}'" >> $GITHUB_ENV
+          echo "machine_type='${{ env.x86_instance_type }}'" >> $GITHUB_ENV
 
       - name: Extract gcp machine type - arm
         if: ${{ matrix.arch == 'arm' }}
         run: |
-          machine_type='t2a-standard-2'
-          echo "machine_type='${machine_type}'" >> $GITHUB_ENV
+          echo "machine_type='${{ env.arm_instance_type }}'" >> $GITHUB_ENV
 
       - id: "auth"
         uses: "google-github-actions/auth@v1"
@@ -109,10 +109,19 @@ jobs:
               echo "Instance did not become running within $TIMEOUT seconds."
           fi
 
+      - name: copy validation script via ssh password
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ steps.create_ec2_instance.outputs.public_ip }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "./redis-stack-validation.sh"
+          target: "~/"
+
       - name: validate modules are installed in redis-server
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ steps.create_vm.outputs.public_ip }}
+          host: ${{ steps.create_ec2_instance.outputs.public_ip }}
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
@@ -120,19 +129,8 @@ jobs:
             if [[ $arch == "arm" ]]; then
               sudo redis-stack-server --daemonize yes
             fi
-            # Delete all SSH authorized keys for the current user
-            sudo rm -f ~/.ssh/authorized_keys
-            sudo apt install redis-tools -y
-            sleep 10
-            redis_modules=$(redis-cli module list | wc | awk '{print $1}')
-            if [ "$redis_modules" -gt 1 ]; then
-              echo "Redis has more than one module installed."
-            else
-              echo "Redis has no modules installed"
-              exit 1
-            fi
-            # Flush all logs
-            sudo rm /var/log/syslog* /var/log/auth*
+            chmod +x /home/ubuntu/redis-stack-validation.sh
+            /home/ubuntu/redis-stack-validation.sh
 
       - name: Terminate image instance - ${{ matrix.arch }}
         if: always() && steps.create_vm.outcome == 'success'
