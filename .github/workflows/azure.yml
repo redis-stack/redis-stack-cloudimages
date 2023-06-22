@@ -36,6 +36,7 @@ jobs:
       machine_name: redis-stack-ci-${{ matrix.arch }}
       zone: eastus #until we will support multi regions
       resource_group: redisStackCloudImages
+      x64_instance_type: Standard_DS2_v2
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -63,8 +64,7 @@ jobs:
       - name: Extract Azure machine type - x64
         if: ${{ matrix.arch == 'x64' }}
         run: |
-          machine_type='Standard_DS2_v2'
-          echo "machine_type='${machine_type}'" >> $GITHUB_ENV
+          echo "machine_type='${{ env.x64_instance_type }}'" >> $GITHUB_ENV
 
       - name: Azure Login
         uses: azure/login@v1
@@ -111,6 +111,15 @@ jobs:
           else
               echo "Instance did not become running within $TIMEOUT seconds."
           fi
+
+      - name: copy validation script via ssh password
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ steps.create_vm.outputs.public_ip }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "./redis-stack-validation.sh"
+          target: "/home/ubuntu"
 
       - name: validate modules are installed in redis-server
         uses: appleboy/ssh-action@master
