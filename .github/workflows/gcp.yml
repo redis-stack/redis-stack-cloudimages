@@ -112,16 +112,16 @@ jobs:
       - name: copy validation script via ssh password
         uses: appleboy/scp-action@v0.1.4
         with:
-          host: ${{ steps.create_ec2_instance.outputs.public_ip }}
+          host: ${{ steps.create_vm.outputs.public_ip }}
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "./redis-stack-validation.sh"
-          target: "~/"
+          target: "/home/ubuntu"
 
       - name: validate modules are installed in redis-server
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ steps.create_ec2_instance.outputs.public_ip }}
+          host: ${{ steps.create_vm.outputs.public_ip }}
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |

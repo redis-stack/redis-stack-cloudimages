@@ -112,6 +112,15 @@ jobs:
               echo "Instance did not become running within $TIMEOUT seconds."
           fi
 
+      - name: copy validation script via ssh password
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ steps.create_vm.outputs.public_ip }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "./redis-stack-validation.sh"
+          target: "/home/ubuntu"
+
       - name: validate modules are installed in redis-server
         uses: appleboy/ssh-action@master
         with:
